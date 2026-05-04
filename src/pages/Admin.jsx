@@ -719,20 +719,22 @@ export default function Admin() {
 
 
     const handleGenerateTimetable = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!ttBranch || !ttSemester || !ttSemType) {
-            alert("Please select branch, semester, and sem type.");
+            alert("Please select semester type, branch and semester first.");
             return;
         }
         setTtGenerating(true);
-        setGeneratedTimetable(null);
-        
         try {
-            const branchSubjects = subjectsData?.[ttSemType]?.[ttBranch]?.[ttSemester];
-            if (!branchSubjects) {
-                throw new Error("No subjects found for this selection in subjects.json");
+            // Correct extraction based on subjects.json structure
+            const subjectsToAssign = subjectsData?.[ttSemType]?.[ttBranch]?.[ttSemester] || [];
+
+            if (subjectsToAssign.length === 0) {
+                alert(`No subjects found for ${ttBranch} Sem ${ttSemester} (${ttSemType} semester) in subjects.json.`);
+                setTtGenerating(false);
+                return;
             }
-            
+
             const response = await fetch('http://localhost:8000/api/v1/timetable/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -740,25 +742,106 @@ export default function Admin() {
                     branch: ttBranch,
                     semester: ttSemester,
                     sem_type: ttSemType,
-                    subjects: branchSubjects,
+                    subjects: subjectsToAssign,
                     faculty_data: facultyList
                 })
             });
-            
-            if (!response.ok) throw new Error("API request failed");
+
+            if (!response.ok) {
+                throw new Error(`Server responded with ${response.status}`);
+            }
+
             const result = await response.json();
-            
             if (result.success) {
                 setGeneratedTimetable(result.data.timetable);
-                logAdminAction('Generated Timetable', 'timetable-generator', `${ttBranch} Sem ${ttSemester}`);
+                logAdminAction('Generated Timetable', 'timetable', `${ttBranch} Sem ${ttSemester}`);
             } else {
-                throw new Error(result.error || "Generation failed");
+                alert("Generation failed: " + result.error);
             }
         } catch (err) {
             console.error(err);
-            alert("Failed to generate timetable: " + err.message);
+            alert("Error generating timetable. Is the AI Engine running on port 8000?");
         } finally {
             setTtGenerating(false);
+        }
+    };
+
+    const handleStoreTimetableAndFaculty = async () => {
+        if (!generatedTimetable) return;
+        setIsSaving(true);
+        try {
+            // 1. Save Timetable
+            const ttRef = ref(database, `timetables/${ttBranch}/${ttSemester}`);
+            await set(ttRef, {
+                branch: ttBranch,
+                semester: ttSemester,
+                semType: ttSemType,
+                timetable: generatedTimetable,
+                updatedAt: Date.now()
+            });
+
+            // 2. Process Faculty & Classes
+            const facultyAccounts = {};
+            const processedClasses = [];
+
+            generatedTimetable.forEach(day => {
+                day.periods.forEach(period => {
+                    const facultyName = period.faculty_name || period.faculty;
+                    const subject = period.subject_code || period.subject;
+                    
+                    if (facultyName && subject) {
+                        const cleanFacultyName = facultyName.trim();
+                        // Deterministic email
+                        const cleanName = cleanFacultyName.toLowerCase().replace(/[^a-z]/g, '');
+                        const email = `${cleanName}@samecollege.com`;
+                        
+                        facultyAccounts[email] = {
+                            name: cleanFacultyName,
+                            email: email,
+                            password: 'password123',
+                            role: 'FACULTY'
+                        };
+
+                        const classId = `${ttBranch}_${ttSemester}_${subject.replace(/\s+/g, '_').replace(/\./g, '_')}`;
+                        processedClasses.push({
+                            id: classId,
+                            className: `${ttBranch} - ${ttSemester} - ${subject}`,
+                            subject: subject,
+                            facultyName: cleanFacultyName,
+                            facultyEmail: email,
+                            branch: ttBranch,
+                            semester: ttSemester
+                        });
+                    }
+                });
+            });
+
+            const facultyAccountsToStore = {};
+            Object.keys(facultyAccounts).forEach(email => {
+                const sanitizedEmail = email.replace(/\./g, '_');
+                facultyAccountsToStore[sanitizedEmail] = facultyAccounts[email];
+            });
+
+            await set(ref(database, 'faculty_testing_accounts'), facultyAccountsToStore);
+
+            for (const email of Object.keys(facultyAccounts)) {
+                await set(ref(database, `privileged_emails/${email.replace(/\./g, '_')}`), 'FACULTY');
+            }
+
+            for (const cls of processedClasses) {
+                await set(ref(database, `classes/${cls.id}`), {
+                    ...cls,
+                    updatedAt: Date.now()
+                });
+            }
+
+            logAdminAction('Stored Timetable & Faculty', 'timetable', `${ttBranch} Sem ${ttSemester}`);
+            alert("Success! Timetable saved and faculty accounts generated.");
+        } catch (err) {
+            console.error(err);
+            alert("Store failed: " + err.message);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -1273,7 +1356,7 @@ export default function Admin() {
                                         {generatedTimetable && (
                                             <div style={{ marginTop: '3rem' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                                    <h4>Generated Timetable</h4>
+                                                    <h4>Generated Timetable Preview</h4>
                                                     <button className="btn-outline" onClick={() => {
                                                         const blob = new Blob([JSON.stringify(generatedTimetable, null, 2)], {type: 'application/json'});
                                                         const url = URL.createObjectURL(blob);
@@ -1285,7 +1368,6 @@ export default function Admin() {
                                                         <Download size={16} /> Export JSON
                                                     </button>
                                                 </div>
-                                                
                                                 <div style={{ overflowX: 'auto', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                     <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
                                                         <thead>
@@ -1299,11 +1381,11 @@ export default function Admin() {
                                                                 <tr key={idx}>
                                                                     <td style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', fontWeight: '600' }}>{day.day}</td>
                                                                     <td style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                                                             {day.periods.map((p, pIdx) => (
-                                                                                <div key={pIdx} style={{ padding: '0.5rem 0.75rem', background: p.type === 'LAB' ? 'rgba(0,243,255,0.1)' : 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.85rem' }}>
-                                                                                    <div style={{ fontWeight: '600', color: p.type === 'LAB' ? '#00f3ff' : 'white' }}>{p.subject_code}</div>
-                                                                                    <div style={{ color: 'var(--text-muted)' }}>{p.start_time}-{p.end_time}</div>
+                                                                                <div key={pIdx} style={{ padding: '0.4rem 0.8rem', background: 'rgba(0, 243, 255, 0.1)', borderRadius: '6px', border: '1px solid rgba(0, 243, 255, 0.2)', fontSize: '0.85rem' }}>
+                                                                                    <div style={{ fontWeight: '600' }}>{p.subject_code || p.subject}</div>
+                                                                                    <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{p.start_time} - {p.end_time} • {p.faculty_name || p.faculty}</div>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
@@ -1312,6 +1394,40 @@ export default function Admin() {
                                                             ))}
                                                         </tbody>
                                                     </table>
+                                                </div>
+
+                                                <div style={{ marginTop: '3rem', padding: '2rem', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '16px', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                            <ShieldCheck color="#a855f7" size={24} />
+                                                            <h4 style={{ margin: 0 }}>Faculty Account Setup</h4>
+                                                        </div>
+                                                        <button 
+                                                            className="btn-primary" 
+                                                            onClick={handleStoreTimetableAndFaculty}
+                                                            disabled={isSaving}
+                                                            style={{ background: 'var(--accent-color)', color: 'black' }}
+                                                        >
+                                                            {isSaving ? 'Processing...' : 'Store & Create Faculty Accounts'}
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                                                        The following accounts will be created/updated. Faculty can log in with these credentials to manage their assigned classes.
+                                                    </p>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                                                        {[...new Set(generatedTimetable.flatMap(d => d.periods.map(p => p.faculty_name || p.faculty)))].filter(Boolean).map((facultyName, fidx) => {
+                                                            const email = `${facultyName.toLowerCase().replace(/[^a-z]/g, '')}@samecollege.com`;
+                                                            return (
+                                                                <div key={fidx} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    <div style={{ fontSize: '0.7rem', color: '#a855f7', textTransform: 'uppercase', marginBottom: '0.25rem', fontWeight: 'bold' }}>{facultyName}</div>
+                                                                    <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'white' }}>{email}</div>
+                                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pass: password123</div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

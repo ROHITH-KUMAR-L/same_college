@@ -16,6 +16,8 @@ export default function ResourceManager() {
     const [fileName, setFileName] = useState('');
     const [fileType, setFileType] = useState('Note'); // 'Note' or 'Paper'
     const [fileUrl, setFileUrl] = useState('');
+    const [facultyClasses, setFacultyClasses] = useState([]);
+    const [newResource, setNewResource] = useState({ subject: '' });
     const [selBranch, setSelBranch] = useState('');
     const [selSyllabus, setSelSyllabus] = useState('C-20');
     const [selSemester, setSelSemester] = useState('1st Sem');
@@ -38,22 +40,34 @@ export default function ResourceManager() {
             }
         });
 
-        // Fetch Materials - Now from Global Node
+        // Fetch Materials and Classes
         const matRef = ref(database, 'resources/notes');
-        const unsubscribe = onValue(matRef, (snapshot) => {
+        const unsubResources = onValue(matRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 const matList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                // Filter only materials uploaded by this faculty or relevant to their courses if needed
-                // For now, show all to link with admin
                 setMaterials(matList.sort((a, b) => b.timestamp - a.timestamp));
             } else {
                 setMaterials([]);
             }
         });
 
-        return () => unsubscribe();
-    }, []);
+        const classesRef = ref(database, 'classes');
+        const unsubClasses = onValue(classesRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const userClasses = Object.keys(data)
+                    .map(id => ({ id, ...data[id] }))
+                    .filter(c => c.facultyUid === user?.uid);
+                setFacultyClasses(userClasses);
+            }
+        });
+
+        return () => {
+            unsubResources();
+            unsubClasses();
+        };
+    }, [user]);
 
     const handleSimulateUpload = async (e) => {
         e.preventDefault();
@@ -70,6 +84,7 @@ export default function ResourceManager() {
             syllabus: selSyllabus,
             semester: selSemester,
             chapter: chapter || 'General',
+            subject: newResource.subject,
             type: fileType,
             isFolder: false,
             parentId: 'root',
@@ -139,6 +154,17 @@ export default function ResourceManager() {
                                     </select>
                                     <input type="text" placeholder="Chapter / Topic (Optional)" value={chapter} onChange={e => setChapter(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
                                 </div>
+
+                                <select 
+                                    value={newResource.subject} 
+                                    onChange={e => setNewResource({...newResource, subject: e.target.value})}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                                >
+                                    <option value="" style={{ color: 'black' }}>Select Class/Subject</option>
+                                    {facultyClasses.map(c => (
+                                        <option key={c.id} value={c.subject} style={{ color: 'black' }}>{c.className} - {c.subject}</option>
+                                    ))}
+                                </select>
 
                                 <input type="text" placeholder="Direct Download URL (e.g. Google Drive Link)" value={fileUrl} onChange={e => setFileUrl(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
                                 

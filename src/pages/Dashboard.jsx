@@ -31,47 +31,51 @@ export default function StudentDashboard() {
     useEffect(() => {
         if (!user) return;
 
-        const subjects = [
-            { code: 'CS302', name: 'Database Systems' },
-            { code: 'CS401', name: 'Software Engineering' },
-            { code: 'CS303', name: 'Computer Networks' },
-            { code: 'CS402', name: 'Web Programming' }
-        ];
+        // Fetch student's enrolled classes
+        const studentClassesRef = ref(database, `users/${user.uid}/enrolledClasses`);
+        const attendanceRecordsRef = ref(database, 'attendance_records');
 
-        const attendanceRef = ref(database, 'attendance_records');
-        const unsubscribe = onValue(attendanceRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const allData = snapshot.val();
+        const unsubscribe = onValue(studentClassesRef, (classSnapshot) => {
+            if (classSnapshot.exists()) {
+                const enrolledClasses = classSnapshot.val();
                 
-                const updatedData = subjects.map(sub => {
-                    const courseRecords = allData[sub.code] || {};
-                    const totalClasses = Object.keys(courseRecords).length;
-                    let classesAttended = 0;
+                onValue(attendanceRecordsRef, (attendanceSnapshot) => {
+                    const allRecords = attendanceSnapshot.exists() ? attendanceSnapshot.val() : {};
+                    
+                    const updatedData = Object.keys(enrolledClasses).map(classId => {
+                        const classInfo = enrolledClasses[classId];
+                        const courseRecords = allRecords[classId] || {};
+                        const totalClasses = Object.keys(courseRecords).length;
+                        let classesAttended = 0;
 
-                    Object.keys(courseRecords).forEach(date => {
-                        if (courseRecords[date][user.uid]) {
-                            classesAttended++;
-                        }
+                        Object.keys(courseRecords).forEach(date => {
+                            if (courseRecords[date][user.uid]) {
+                                classesAttended++;
+                            }
+                        });
+
+                        const percentage = totalClasses === 0 ? 0 : Math.round((classesAttended / totalClasses) * 100);
+                        
+                        let status = 'Excellent';
+                        if (percentage < 75) status = 'Critical';
+                        else if (percentage < 85) status = 'Warning';
+                        else if (percentage < 90) status = 'Good';
+
+                        return {
+                            subject: classInfo.className,
+                            percentage,
+                            status,
+                            classesNeeded: Math.max(0, Math.ceil((0.75 * (totalClasses + 5) - classesAttended))) 
+                        };
                     });
 
-                    const percentage = totalClasses === 0 ? 0 : Math.round((classesAttended / totalClasses) * 100);
-                    
-                    let status = 'Excellent';
-                    if (percentage < 75) status = 'Critical';
-                    else if (percentage < 85) status = 'Warning';
-                    else if (percentage < 90) status = 'Good';
-
-                    return {
-                        subject: sub.name,
-                        percentage,
-                        status,
-                        classesNeeded: Math.max(0, Math.ceil((0.75 * (totalClasses + 5) - classesAttended))) // Rough estimate for warning
-                    };
+                    setAttendanceData(updatedData);
+                    setLoadingAttendance(false);
                 });
-
-                setAttendanceData(updatedData);
+            } else {
+                setAttendanceData([]);
+                setLoadingAttendance(false);
             }
-            setLoadingAttendance(false);
         });
 
         return () => unsubscribe();

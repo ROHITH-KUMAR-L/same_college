@@ -31,6 +31,15 @@ export default function MarkAttendance() {
                 return;
             }
 
+            // Only students can mark attendance
+            if (user.role !== 'STUDENT' && user.role !== undefined) { 
+                // Note: user.role might be undefined if not yet fetched from DB, 
+                // but AuthContext should have it.
+                setStatus('error');
+                setErrorMessage('Only students are authorized to mark attendance.');
+                return;
+            }
+
             if (!course || !sessionId) {
                 setStatus('error');
                 setErrorMessage('Invalid QR Code. Missing course or session info.');
@@ -69,12 +78,19 @@ export default function MarkAttendance() {
                     }
                 }
 
-                // 3. Mark attendance
+                // 3. Fetch full class details for the record
+                const classDataRef = ref(database, `classes/${course}`);
+                const classSnapshot = await get(classDataRef);
+                const classInfo = classSnapshot.exists() ? classSnapshot.val() : { className: course, subject: '' };
+
+                // 4. Mark attendance
                 const attendanceRef = ref(database, `attendance_records/${course}/${dateStr}/${user.uid}`);
                 await set(attendanceRef, {
-                    name: user.displayName || 'Unknown Student',
+                    name: user.displayName || user.name || 'Unknown Student',
                     email: user.email,
                     status: 'present',
+                    className: classInfo.className || course,
+                    subject: classInfo.subject || '',
                     ip: studentIp || 'unverified',
                     timestamp: serverTimestamp()
                 });

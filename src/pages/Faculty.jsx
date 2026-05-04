@@ -9,9 +9,11 @@ import AttendanceManager from '../components/faculty/AttendanceManager';
 import ScheduleManager from '../components/faculty/ScheduleManager';
 import LeaveManager from '../components/faculty/LeaveManager';
 import ResourceManager from '../components/faculty/ResourceManager';
+import ClassManager from '../components/faculty/ClassManager';
 
 const TABS = [
     { id: 'overview',    label: 'Overview',          icon: TrendingUp },
+    { id: 'classes',     label: 'My Classes',        icon: Users },
     { id: 'attendance',  label: 'Attendance',         icon: QrCode },
     { id: 'schedule',    label: 'Schedule',           icon: Calendar },
     { id: 'leaves',      label: 'Leave Management',   icon: Clock },
@@ -131,11 +133,19 @@ export default function FacultyDashboard() {
             </div>
 
             {/* Tab content */}
-            {activeTab === 'overview'   && <OverviewTab studentCount={studentCount} todayPresent={todayPresent} pendingLeaves={pendingLeaves} />}
-            {activeTab === 'attendance' && <AttendanceManager />}
-            {activeTab === 'schedule'   && <ScheduleManager />}
-            {activeTab === 'leaves'     && <LeaveManager />}
-            {activeTab === 'resources'  && <ResourceManager />}
+            {activeTab === 'overview' ? (
+                        <OverviewTab studentCount={studentCount} todayPresent={todayPresent} pendingLeaves={pendingLeaves} />
+                    ) : activeTab === 'classes' ? (
+                        <ClassManager />
+                    ) : activeTab === 'attendance' ? (
+                        <AttendanceManager />
+                    ) : activeTab === 'schedule' ? (
+                        <ScheduleManager />
+                    ) : activeTab === 'leaves' ? (
+                        <LeaveManager />
+                    ) : activeTab === 'resources' ? (
+                        <ResourceManager />
+                    ) : null}
         </div>
     );
 }

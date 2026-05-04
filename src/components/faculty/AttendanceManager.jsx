@@ -3,17 +3,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle, BarChart2, PlayCircle, StopCircle, Download, Users, Loader } from 'lucide-react';
 import { ref, set, onValue, remove } from 'firebase/database';
 import { database } from '../../firebase';
+import { useAuthContext } from '../../context/AuthContext';
 
 export default function AttendanceManager() {
+    const { user } = useAuthContext();
     const [activeTab, setActiveTab] = useState('qr');
-    const subjects = [
-        { code: 'CS302', name: 'Database Systems' },
-        { code: 'CS401', name: 'Software Engineering' },
-        { code: 'CS303', name: 'Computer Networks' },
-        { code: 'CS402', name: 'Web Programming' }
-    ];
-
-    const [selectedCourse, setSelectedCourse] = useState(subjects[0].code);
+    const [facultyClasses, setFacultyClasses] = useState([]);
+    const [selectedCourse, setSelectedCourse] = useState('');
     const [isSessionActive, setIsSessionActive] = useState(false);
     const [sessionId, setSessionId] = useState(null);
     
@@ -43,8 +39,27 @@ export default function AttendanceManager() {
             }
             setLoadingStudents(false);
         });
-        return () => unsubscribe();
-    }, []);
+
+        // Fetch Faculty Classes
+        const classesRef = ref(database, 'classes');
+        const unsubClasses = onValue(classesRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const userClasses = Object.keys(data)
+                    .map(id => ({ id, ...data[id] }))
+                    .filter(c => (c.facultyUid === user?.uid) || (c.facultyEmail && c.facultyEmail.toLowerCase() === user?.email?.toLowerCase()));
+                setFacultyClasses(userClasses);
+                if (userClasses.length > 0 && !selectedCourse) {
+                    setSelectedCourse(userClasses[0].id);
+                }
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            unsubClasses();
+        };
+    }, [user, selectedCourse]);
 
     // Listen for today's attendance and all attendance (for reports)
     useEffect(() => {
@@ -138,7 +153,7 @@ export default function AttendanceManager() {
                     }}
                     style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '8px', outline: 'none' }}
                 >
-                    {subjects.map(s => <option key={s.code} value={s.code}>{s.code} - {s.name}</option>)}
+                    {facultyClasses.map(s => <option key={s.id} value={s.id}>{s.className}</option>)}
                 </select>
             </div>
 
@@ -160,7 +175,7 @@ export default function AttendanceManager() {
                             <div style={{ background: 'white', padding: '2rem', display: 'inline-block', borderRadius: '16px', marginBottom: '1.5rem' }}>
                                 <QRCodeSVG value={`${window.location.origin}/mark-attendance?course=${selectedCourse}&session=${sessionId}`} size={256} />
                             </div>
-                            <h3 style={{ color: '#22c55e', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Session Active — {subjects.find(s => s.code === selectedCourse)?.name}</h3>
+                            <h3 style={{ color: '#22c55e', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Session Active — {facultyClasses.find(s => s.id === selectedCourse)?.className}</h3>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Students scan to instantly mark attendance for {selectedCourse}.</p>
                             
                             <button
@@ -177,24 +192,18 @@ export default function AttendanceManager() {
                             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Select the subject to generate a secure attendance QR code.</p>
                             
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
-                                <select
-                                    value={selectedCourse}
-                                    onChange={(e) => setSelectedCourse(e.target.value)}
-                                    style={{ 
-                                        width: '100%',
-                                        background: 'rgba(255,255,255,0.05)', 
-                                        color: 'white', 
-                                        border: '1px solid rgba(255,255,255,0.1)', 
-                                        padding: '1rem', 
-                                        borderRadius: '12px', 
-                                        outline: 'none',
-                                        fontSize: '1rem'
-                                    }}
-                                >
-                                    {subjects.map(s => (
-                                        <option key={s.code} value={s.code}>{s.code} - {s.name}</option>
-                                    ))}
-                                </select>
+                                <div className="form-group" style={{ width: '100%' }}>
+                                    <label>Select Class</label>
+                                    <select 
+                                        value={selectedCourse} 
+                                        onChange={e => setSelectedCourse(e.target.value)}
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                                    >
+                                        {facultyClasses.map(c => (
+                                            <option key={c.id} value={c.id} style={{ color: 'black' }}>{c.className} - {c.subject}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
                                 <button
                                     onClick={toggleSession}

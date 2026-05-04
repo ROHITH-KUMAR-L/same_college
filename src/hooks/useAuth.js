@@ -38,13 +38,19 @@ export function useAuth() {
           // Determine initial role
           let role = "STUDENT";
           const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-          const facultyEmail = import.meta.env.VITE_FACULTY_EMAIL;
-          const studentEmail = import.meta.env.VITE_STUDENT_EMAIL;
-
-          if (firebaseUser.email === adminEmail) role = "ADMIN";
-          else if (firebaseUser.email === facultyEmail) role = "FACULTY";
-          else if (firebaseUser.email === studentEmail) role = "STUDENT";
-          else if (existingData.role) role = existingData.role;
+          
+          // Check privileged list first
+          const privilegedRef = ref(database, `privileged_emails/${firebaseUser.email.replace(/\./g, '_')}`);
+          const privilegedSnap = await get(privilegedRef);
+          
+          if (firebaseUser.email === adminEmail || 
+              ['rohithkumarl2006@gmail.com', 'vivekvernekar02@gmail.com', 'contactus.techastra@gmail.com'].includes(firebaseUser.email)) {
+            role = "ADMIN";
+          } else if (privilegedSnap.exists()) {
+            role = privilegedSnap.val();
+          } else if (existingData.role) {
+            role = existingData.role;
+          }
 
           if (!existingData.createdAt) {
             const statsRef = ref(database, 'stats/totalVerifiedUsers');

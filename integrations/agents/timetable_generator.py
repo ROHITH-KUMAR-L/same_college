@@ -8,6 +8,7 @@ load_dotenv()
 
 class ClassPeriod(BaseModel):
     subject_code: str = Field(description="Subject code or short name")
+    faculty_name: str = Field(description="Name of the assigned professor from the available faculty data")
     start_time: str = Field(description="Start time, e.g. 09:00 AM")
     end_time: str = Field(description="End time, e.g. 10:00 AM")
     type: str = Field(description="Type of period, either 'THEORY' or 'LAB'")

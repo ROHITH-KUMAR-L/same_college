@@ -16,6 +16,8 @@ import Faculty from './pages/Faculty';
 import PrivacyPolicy from './pages/Legal';
 import Papers from './pages/Papers';
 import MarkAttendance from './pages/MarkAttendance';
+import DebugCreateFaculty from './pages/DebugCreateFaculty';
+import Enroll from './pages/Enroll';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -39,6 +41,8 @@ function App() {
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><Admin /></ProtectedRoute>} />
               <Route path="/faculty" element={<ProtectedRoute allowedRoles={['FACULTY', 'ADMIN']}><Faculty /></ProtectedRoute>} />
               <Route path="/mark-attendance" element={<MarkAttendance />} />
+              <Route path="/enroll/:classId" element={<Enroll />} />
+              <Route path="/debug-faculty-setup" element={<DebugCreateFaculty />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
           </main>

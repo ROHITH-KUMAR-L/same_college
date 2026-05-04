@@ -40,6 +40,8 @@ export default function LeavePortal() {
     });
     const [aiEvaluation, setAiEvaluation] = useState(null);
     const [showResultModal, setShowResultModal] = useState(false);
+    const [selectedLeave, setSelectedLeave] = useState(null);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -134,13 +136,13 @@ export default function LeavePortal() {
             // Deduct balance if AI Approved
             if (aiResult.status === 'Approved') {
                 const typeKey = leaveType.toLowerCase().split(' ')[0];
-                if (typeKey === 'medical' || typeKey === 'personal') {
-                    const balanceKey = typeKey === 'personal' ? 'casual' : 'medical';
-                    if (typeof leaveBalance[balanceKey] === 'number') {
-                        update(ref(database, `users/${user.uid}/leaveBalance`), {
-                            [balanceKey]: Math.max(0, leaveBalance[balanceKey] - 1)
-                        });
-                    }
+                const balanceKey = typeKey === 'personal' ? 'casual' : typeKey === 'medical' ? 'medical' : null;
+                
+                if (balanceKey && typeof leaveBalance[balanceKey] === 'number') {
+                    const newBalance = Math.max(0, leaveBalance[balanceKey] - 1);
+                    update(ref(database, `users/${user.uid}/leaveBalance`), {
+                        [balanceKey]: newBalance
+                    });
                 }
             }
 
@@ -216,13 +218,22 @@ export default function LeavePortal() {
                                             <div style={{ 
                                                 display: 'flex', 
                                                 alignItems: 'center', 
+                                                justifyContent: 'space-between',
                                                 gap: '0.4rem', 
-                                                color: leave.status === 'Approved' ? '#22c55e' : '#facc15', 
+                                                color: leave.status === 'Approved' ? '#22c55e' : leave.status === 'Rejected' ? '#ef4444' : '#facc15', 
                                                 fontSize: '0.85rem', 
                                                 fontWeight: '800' 
                                             }}>
-                                                {leave.status === 'Approved' ? <ShieldCheck size={14} /> : <Clock size={14} />}
-                                                {leave.status}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                    {leave.status === 'Approved' ? <ShieldCheck size={14} /> : leave.status === 'Rejected' ? <ShieldAlert size={14} /> : <Clock size={14} />}
+                                                    {leave.status}
+                                                </div>
+                                                <button 
+                                                    onClick={() => { setSelectedLeave(leave); setShowHistoryModal(true); }}
+                                                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', padding: '0.4rem', borderRadius: '6px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center' }}
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -411,6 +422,68 @@ export default function LeavePortal() {
                         <button className="btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={() => { setShowResultModal(false); setIsApplyOpen(false); }}>
                             Got it, thanks!
                         </button>
+                    </div>
+                </div>
+            )}
+            {/* History Detail Modal */}
+            {showHistoryModal && selectedLeave && (
+                <div className="test-modal-overlay" onClick={() => setShowHistoryModal(false)}>
+                    <div className="test-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                        <button className="test-modal-close" onClick={() => setShowHistoryModal(false)}><X size={20} /></button>
+                        
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <FileText size={32} color="var(--accent-color)" />
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'white', marginBottom: '0.25rem' }}>Application Details</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>ID: {selectedLeave.id}</p>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px' }}>
+                                    <label style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Type</label>
+                                    <div style={{ color: 'white', fontWeight: '700' }}>{selectedLeave.type}</div>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px' }}>
+                                    <label style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Status</label>
+                                    <div style={{ color: selectedLeave.status === 'Approved' ? '#22c55e' : '#facc15', fontWeight: '700' }}>{selectedLeave.status}</div>
+                                </div>
+                            </div>
+
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px' }}>
+                                <label style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Reason</label>
+                                <div style={{ color: 'white', fontWeight: '600', lineHeight: '1.4' }}>{selectedLeave.reason}</div>
+                            </div>
+
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '12px' }}>
+                                <label style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Duration</label>
+                                <div style={{ color: 'white', fontWeight: '600' }}>{selectedLeave.from} to {selectedLeave.to}</div>
+                            </div>
+
+                            {selectedLeave.aiReasoning && (
+                                <div style={{ background: 'rgba(253, 224, 71, 0.05)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(253, 224, 71, 0.1)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                        <Sparkles size={16} color="var(--accent-color)" />
+                                        <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--accent-color)', textTransform: 'uppercase' }}>AI Analysis Verdict (Score: {selectedLeave.aiScore}%)</span>
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.8)', lineHeight: '1.5', margin: 0 }}>
+                                        {selectedLeave.aiReasoning}
+                                    </p>
+                                </div>
+                            )}
+
+                            {selectedLeave.documentName && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <FileText size={20} color="var(--accent-color)" />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'white' }}>{selectedLeave.documentName}</div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Attached Proof</div>
+                                    </div>
+                                    <button className="btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.7rem' }}>Download</button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,25 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import { 
-    Users, 
-    CheckCircle, 
-    Clock, 
-    Calendar, 
-    Plus, 
-    ArrowUpRight, 
-    MessageSquare, 
-    FileText, 
-    Zap, 
-    UserCheck, 
-    Book, 
-    LogOut,
-    ChevronRight,
-    UserCircle,
-    Info,
-    ShieldCheck,
-    ShieldAlert
-} from 'lucide-react';
-import { ref, onValue, set, push, serverTimestamp, remove, update } from 'firebase/database';
+import { Users, UserCheck, Calendar, Clock, Book, QrCode, FileText, TrendingUp, CheckCircle } from 'lucide-react';
+import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import './Admin.css';
 
@@ -28,216 +10,224 @@ import ScheduleManager from '../components/faculty/ScheduleManager';
 import LeaveManager from '../components/faculty/LeaveManager';
 import ResourceManager from '../components/faculty/ResourceManager';
 
+const TABS = [
+    { id: 'overview',    label: 'Overview',          icon: TrendingUp },
+    { id: 'attendance',  label: 'Attendance',         icon: QrCode },
+    { id: 'schedule',    label: 'Schedule',           icon: Calendar },
+    { id: 'leaves',      label: 'Leave Management',   icon: Clock },
+    { id: 'resources',   label: 'Course Materials',   icon: Book },
+];
+
 export default function FacultyDashboard() {
     const { user } = useAuthContext();
     const [activeTab, setActiveTab] = useState('overview');
+    const [studentCount, setStudentCount] = useState(0);
+    const [pendingLeaves, setPendingLeaves] = useState(0);
+    const [todayPresent, setTodayPresent] = useState(0);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    useEffect(() => {
+        // Real student count
+        const usersRef = ref(database, 'users');
+        onValue(usersRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                setStudentCount(Object.values(data).filter(u => u.role === 'STUDENT').length);
+            }
+        });
+
+        // Pending student leaves
+        const leavesRef = ref(database, 'admin_leaves');
+        onValue(leavesRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                setPendingLeaves(Object.values(data).filter(l => l.status === 'Pending').length);
+            }
+        });
+
+        // Today's attendance (across all courses)
+        const attRef = ref(database, `attendance_records`);
+        onValue(attRef, (snap) => {
+            if (snap.exists()) {
+                let count = 0;
+                const data = snap.val();
+                Object.values(data).forEach(course => {
+                    if (course[today]) count += Object.keys(course[today]).length;
+                });
+                setTodayPresent(count);
+            }
+        });
+    }, [today]);
 
     return (
-        <div className="admin-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="admin-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', paddingTop: '6rem' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', marginBottom: '0.5rem' }}>Faculty Command Center</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Welcome back, Prof. {user?.displayName?.split(' ')[0] || 'User'}. Manage your classes and attendance.</p>
+            <div style={{ marginBottom: '2.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                    <img
+                        src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName}&background=random`}
+                        alt="avatar"
+                        style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-color)' }}
+                    />
+                    <div>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'white', lineHeight: 1.2 }}>
+                            Welcome, <span style={{ color: 'var(--accent-color)' }}>{user?.displayName?.split(' ')[0] || 'Professor'}</span>
+                        </h1>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Faculty Command Center • {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Plus size={18} /> New Assignment
-                    </button>
-                </div>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <StatPill icon={<Users size={20} color="var(--accent-color)" />} label="Students" value={studentCount} />
+                <StatPill icon={<CheckCircle size={20} color="#22c55e" />} label="Present Today" value={todayPresent} />
+                <StatPill icon={<Clock size={20} color="#f59e0b" />} label="Pending Leaves" value={pendingLeaves} badge={pendingLeaves > 0} />
+                <StatPill icon={<FileText size={20} color="#3b82f6" />} label="Resources" value="—" />
             </div>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '2rem', overflowX: 'auto' }}>
-                <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<Users size={18} />} label="Overview" />
-                <TabButton active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} icon={<UserCheck size={18} />} label="Attendance & Reports" />
-                <TabButton active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} icon={<Calendar size={18} />} label="My Schedule" />
-                <TabButton active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')} icon={<Clock size={18} />} label="Leave Management" />
-                <TabButton active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} icon={<Book size={18} />} label="Course Materials" />
-            </div>
-
-            {/* Content Area */}
-            {activeTab === 'overview' && <OverviewTab />}
-            {activeTab === 'attendance' && <AttendanceManager />}
-            {activeTab === 'schedule' && <ScheduleManager />}
-            {activeTab === 'leaves' && <LeaveManager />}
-            {activeTab === 'resources' && <ResourceManager />}
-        </div>
-    );
-}
-
-function TabButton({ active, onClick, icon, label }) {
-    return (
-        <button 
-            onClick={onClick}
-            style={{ 
-                background: active ? 'rgba(253, 224, 71, 0.1)' : 'transparent', 
-                color: active ? 'var(--accent-color)' : 'white', 
-                border: active ? '1px solid var(--accent-color)' : '1px solid transparent', 
-                padding: '0.5rem 1rem', 
-                borderRadius: '8px', 
-                cursor: 'pointer', 
-                fontWeight: 'bold',
+            <div style={{
                 display: 'flex',
-                alignItems: 'center',
                 gap: '0.5rem',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s'
-            }}
-        >
-            {icon} {label}
-        </button>
-    );
-}
-
-function OverviewTab() {
-    const { user } = useAuthContext();
-    const [attendanceStatus, setAttendanceStatus] = useState('Standby');
-    const [isScanning, setIsScanning] = useState(false);
-    const [sessionId, setSessionId] = useState(null);
-    const [detectedCount, setDetectedCount] = useState(0);
-
-    useEffect(() => {
-        if (isScanning && !sessionId) {
-            const sessionsRef = ref(database, 'attendance_sessions');
-            const newSessionRef = push(sessionsRef);
-            const sid = newSessionRef.key;
-            setSessionId(sid);
-            
-            set(newSessionRef, {
-                facultyId: user?.uid,
-                facultyName: user?.displayName,
-                startTime: serverTimestamp(),
-                status: 'active',
-                course: 'Database Systems', // Mock for now
-                room: 'Lab-12'
-            });
-        } else if (!isScanning && sessionId) {
-            const sessionRef = ref(database, `attendance_sessions/${sessionId}`);
-            remove(sessionRef); // Close session
-            setSessionId(null);
-            setDetectedCount(0);
-        }
-    }, [isScanning]);
-
-    useEffect(() => {
-        let interval;
-        if (isScanning) {
-            interval = setInterval(() => {
-                setDetectedCount(prev => Math.min(prev + Math.floor(Math.random() * 3), 62));
-            }, 3000);
-        }
-        return () => clearInterval(interval);
-    }, [isScanning]);
-
-    const toggleAttendance = () => {
-        setIsScanning(!isScanning);
-        setAttendanceStatus(isScanning ? 'Standby' : 'Scanning Active');
-    };
-
-    return (
-        <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <FacultyStatCard icon={<Users size={24} color="var(--accent-color)" />} label="Active Courses" value="4" sub="3 Lectures, 1 Lab" />
-                <FacultyStatCard icon={<CheckCircle size={24} color="#22c55e" />} label="Total Students" value="182" sub="+12 from last semester" />
-                <FacultyStatCard icon={<Clock size={24} color="#3b82f6" />} label="Grading Pending" value="45" sub="Due in 4 days" />
-                <FacultyStatCard icon={<MessageSquare size={24} color="#a855f7" />} label="Student Queries" value="8" sub="3 Urgent" />
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                paddingBottom: '0',
+                marginBottom: '2rem',
+                overflowX: 'auto',
+                scrollbarWidth: 'none'
+            }}>
+                {TABS.map(tab => {
+                    const Icon = tab.icon;
+                    const active = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                background: 'transparent',
+                                color: active ? 'var(--accent-color)' : 'var(--text-muted)',
+                                border: 'none',
+                                borderBottom: active ? '2px solid var(--accent-color)' : '2px solid transparent',
+                                padding: '0.75rem 1.25rem',
+                                cursor: 'pointer',
+                                fontWeight: active ? '700' : '500',
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.2s',
+                                marginBottom: '-1px'
+                            }}
+                        >
+                            <Icon size={16} /> {tab.label}
+                            {tab.id === 'leaves' && pendingLeaves > 0 && (
+                                <span style={{ background: '#f59e0b', color: 'black', fontSize: '0.65rem', fontWeight: '900', padding: '0.1rem 0.45rem', borderRadius: '999px' }}>{pendingLeaves}</span>
+                            )}
+                        </button>
+                    );
+                })}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                <div className="admin-card" style={{ padding: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <Zap size={24} color="var(--accent-color)" /> AI Automatic Attendance
-                        </h2>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: isScanning ? '#22c55e' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isScanning ? '#22c55e' : '#555', animation: isScanning ? 'pulse 1.5s infinite' : 'none' }}></div>
-                                {attendanceStatus}
-                            </span>
-                            <button className={isScanning ? 'btn-outline' : 'btn-primary'} onClick={toggleAttendance} style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}>
-                                {isScanning ? 'Stop Scanning' : 'Start Session'}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '20px', padding: '3rem', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)', marginBottom: '2rem' }}>
-                        {isScanning ? (
-                            <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-                                <div style={{ width: '120px', height: '120px', borderRadius: '50%', border: '4px solid var(--accent-color)', borderTopColor: 'transparent', margin: '0 auto 2rem', animation: 'spin 2s linear infinite' }}></div>
-                                <h3 style={{ color: 'white', fontSize: '1.25rem', marginBottom: '1rem' }}>Scanning for Devices...</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '400px', margin: '0 auto' }}>Using Bluetooth & WiFi proximity to automatically register present students in the lecture hall.</p>
-                            </div>
-                        ) : (
-                            <div>
-                                <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem' }}>
-                                    <Zap size={48} color="rgba(255,255,255,0.1)" />
-                                </div>
-                                <h3 style={{ color: 'white', fontSize: '1.25rem', marginBottom: '1rem' }}>No Active Session</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Start a session to begin automatic AI attendance tracking.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Detected</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginTop: '0.25rem' }}>{detectedCount}</div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Verified</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#22c55e', marginTop: '0.25rem' }}>{Math.floor(detectedCount * 0.9)}</div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Anomalies</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '0.25rem' }}>{Math.floor(detectedCount * 0.1)}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="admin-card" style={{ padding: '2rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginBottom: '1.5rem' }}>Today's Classes</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <ClassItem time="09:00 AM" title="Advanced ML" room="L-402" students="48" status="Completed" />
-                        <ClassItem time="11:30 AM" title="Database Systems" room="Lab-12" students="62" status="In Progress" active />
-                        <ClassItem time="02:00 PM" title="Software Architecture" room="Online" students="72" status="Upcoming" />
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-}
-
-function FacultyStatCard({ icon, label, value, sub }) {
-    return (
-        <div className="admin-card" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: '0', right: '0', width: '100px', height: '100px', background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>{icon}</div>
-                <div>
-                    <div style={{ fontSize: '1.75rem', fontWeight: '900', color: 'white' }}>{value}</div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>{label}</div>
-                </div>
-            </div>
-            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>{sub}</div>
+            {/* Tab content */}
+            {activeTab === 'overview'   && <OverviewTab studentCount={studentCount} todayPresent={todayPresent} pendingLeaves={pendingLeaves} />}
+            {activeTab === 'attendance' && <AttendanceManager />}
+            {activeTab === 'schedule'   && <ScheduleManager />}
+            {activeTab === 'leaves'     && <LeaveManager />}
+            {activeTab === 'resources'  && <ResourceManager />}
         </div>
     );
 }
 
-function ClassItem({ time, title, room, students, status, active = false }) {
+function StatPill({ icon, label, value, badge }) {
     return (
-        <div style={{ background: active ? 'rgba(253, 224, 71, 0.05)' : 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: active ? '1px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ textAlign: 'center', minWidth: '80px', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>{time}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>{room}</div>
+        <div className="admin-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {icon}
             </div>
-            <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '1rem', fontWeight: '700', color: 'white' }}>{title}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{students} Students Enrolled</div>
+            <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: 'white', lineHeight: 1.1 }}>{value}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>{label}</div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.65rem', fontWeight: '900', padding: '0.25rem 0.6rem', borderRadius: '6px', background: status === 'Completed' ? '#22c55e' : status === 'In Progress' ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)', color: status === 'In Progress' || status === 'Completed' ? 'black' : 'white', textTransform: 'uppercase' }}>{status}</span>
+            {badge && <div style={{ position: 'absolute', top: '8px', right: '10px', width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', animation: 'pulse 1.5s infinite' }}></div>}
+        </div>
+    );
+}
+
+function OverviewTab({ studentCount, todayPresent, pendingLeaves }) {
+    const { user } = useAuthContext();
+    const [schedule, setSchedule] = useState([]);
+
+    useEffect(() => {
+        if (!user?.uid) return;
+        const schedRef = ref(database, `faculty_schedules/${user.uid}`);
+        onValue(schedRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                setSchedule(Object.keys(data).map(k => ({ id: k, ...data[k] })));
+            }
+        });
+    }, [user]);
+
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+            {/* Left: Quick summary */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="admin-card" style={{ padding: '2rem', background: 'linear-gradient(135deg, rgba(253,224,71,0.08), rgba(0,0,0,0))', border: '1px solid rgba(253,224,71,0.12)' }}>
+                    <h2 style={{ color: 'white', fontWeight: '800', fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <TrendingUp size={20} color="var(--accent-color)" /> Quick Stats
+                    </h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                        <QuickStatBox label="Total Students" value={studentCount} color="var(--accent-color)" />
+                        <QuickStatBox label="Present Today" value={todayPresent} color="#22c55e" />
+                        <QuickStatBox label="Pending Leaves" value={pendingLeaves} color="#f59e0b" />
+                    </div>
+                </div>
+
+                {pendingLeaves > 0 && (
+                    <div className="admin-card" style={{ padding: '1.5rem', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <Clock size={20} color="#f59e0b" />
+                            <div>
+                                <div style={{ color: 'white', fontWeight: '700' }}>{pendingLeaves} student leave {pendingLeaves === 1 ? 'request' : 'requests'} awaiting review</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Go to Leave Management tab to approve or reject</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Right: Today's schedule */}
+            <div className="admin-card" style={{ padding: '2rem' }}>
+                <h2 style={{ color: 'white', fontWeight: '800', fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Calendar size={20} color="var(--accent-color)" /> Today's Classes
+                </h2>
+                {schedule.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {schedule.map(item => (
+                            <div key={item.id} style={{ padding: '1rem', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', borderLeft: `3px solid ${item.color || 'var(--accent-color)'}` }}>
+                                <div style={{ color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>{item.course}</div>
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.2rem' }}>{item.time} • {item.room}</div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
+                        <Calendar size={36} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
+                        <p style={{ fontSize: '0.85rem' }}>No schedule data. Visit the Schedule tab to set up your timetable.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function QuickStatBox({ label, value, color }) {
+    return (
+        <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+            <div style={{ fontSize: '2rem', fontWeight: '900', color }}>{value}</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{label}</div>
         </div>
     );
 }

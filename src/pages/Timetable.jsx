@@ -95,7 +95,7 @@ export default function Timetable() {
                                 <div style={{ background: 'var(--accent-color)', color: 'black', padding: '0.5rem 1rem', borderRadius: '12px', fontWeight: '900' }}>
                                     TODAY
                                 </div>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white' }}>Monday</h2>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white' }}>{currentDay}</h2>
                             </div>
                             <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{selectedBranch} • {selectedSem}</span>
                         </div>

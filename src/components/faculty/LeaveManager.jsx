@@ -14,7 +14,6 @@ export default function LeaveManager() {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [studentLeaves, setStudentLeaves] = useState([]);
-    const [leaveType, setLeaveType] = useState('Casual Leave');
     const [viewMode, setViewMode] = useState('apply'); // 'apply' or 'review'
     const [selectedLeave, setSelectedLeave] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);

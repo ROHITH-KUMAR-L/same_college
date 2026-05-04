@@ -64,8 +64,24 @@ export default function AttendanceManager() {
             setIsSessionActive(false);
             setSessionId(null);
         } else {
+            // Get the faculty's current public IP — all students must share this IP (same network)
+            let allowedIp = null;
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                allowedIp = ipData.ip;
+            } catch {
+                // If IP fetch fails, allow without IP restriction (fallback)
+                console.warn('Could not fetch public IP. Session will start without IP lock.');
+            }
+
             const newSessionId = Math.random().toString(36).substring(2, 15);
-            await set(sessionRef, { sessionId: newSessionId, date: today });
+            await set(sessionRef, {
+                sessionId: newSessionId,
+                date: today,
+                allowedIp,           // Students must share this public IP
+                allowedIpLocked: !!allowedIp  // Flag to indicate IP lock is active
+            });
             setSessionId(newSessionId);
             setIsSessionActive(true);
         }

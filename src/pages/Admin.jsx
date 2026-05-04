@@ -18,6 +18,7 @@ import './Admin.css';
 // Admin allowed list (fetched from environment)
 const ADMIN_EMAILS = [
     import.meta.env.VITE_ADMIN_EMAIL,
+    'rohithkumarl2006@gmail.com',
     'vivekvernekar02@gmail.com', // Keeping secondary admins if needed, or I can just use one.
     'contactus.techastra@gmail.com'
 ];
@@ -443,7 +444,7 @@ export default function Admin() {
         );
     }
 
-    if (!ADMIN_EMAILS.includes(user.email)) {
+    if (user.role !== 'ADMIN' && !ADMIN_EMAILS.includes(user.email)) {
         return (
             <div className="container" style={{ paddingTop: '5rem', textAlign: 'center' }}>
                 <h2>Access Denied</h2>

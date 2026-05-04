@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { ref, onValue, push, set, update } from 'firebase/database';
 import { database } from '../../firebase';
 import { useAuthContext } from '../../context/AuthContext';
-import { Zap, ShieldCheck, Info } from 'lucide-react';
+import { Zap, ShieldCheck, Info, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 export default function LeaveManager() {
     const { user } = useAuthContext();
@@ -13,6 +14,7 @@ export default function LeaveManager() {
     const [toDate, setToDate] = useState('');
     const [reasonInput, setReasonInput] = useState('');
     const [studentLeaves, setStudentLeaves] = useState([]);
+    const [leaveType, setLeaveType] = useState('Casual Leave');
     const [viewMode, setViewMode] = useState('apply'); // 'apply' or 'review'
 
     useEffect(() => {
@@ -33,6 +35,7 @@ export default function LeaveManager() {
         updates[`users/${studentUid}/leaves/${leaveId}/status`] = newStatus;
         update(ref(database), updates);
     };
+    useEffect(() => {
         if (!user) return;
 
         const leavesRef = ref(database, `faculty_leaves/${user.uid}`);

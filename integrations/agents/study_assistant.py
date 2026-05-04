@@ -4,11 +4,6 @@ from langgraph.graph import StateGraph, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from dotenv import load_dotenv
-import sys
-
-# Add parent directory to path to import knowledge_base
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from knowledge_base import retrieve_context
 
 load_dotenv()
 

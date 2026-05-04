@@ -1,0 +1,289 @@
+/* Study Assistant Premium Layout */
+.study-assistant-container {
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-top: 6rem;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.study-assistant-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 2rem;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Chat Area */
+.chat-main-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+    position: relative;
+    background: rgba(18, 18, 23, 0.7) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ai-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.ai-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 10px #22c55e;
+}
+
+.ai-status-dot.thinking {
+    background: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.message-bubble {
+    max-width: 85%;
+    padding: 1.25rem 1.5rem;
+    border-radius: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.message-bubble.assistant {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.03);
+    color: #e2e8f0;
+    border-bottom-left-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.message-bubble.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #d97706 100%);
+    color: #000;
+    font-weight: 500;
+    border-bottom-right-radius: 0.5rem;
+    box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2);
+}
+
+.chat-input-wrapper {
+    padding: 1.5rem 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.input-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.premium-input-box {
+    flex: 1;
+    position: relative;
+}
+
+.premium-input-box input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.25rem;
+    padding: 1.25rem 4rem 1.25rem 1.5rem;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.premium-input-box input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 20px rgba(253, 224, 71, 0.1);
+}
+
+.mic-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.3);
+    transition: color 0.2s;
+}
+
+.mic-toggle:hover {
+    color: var(--accent-color);
+}
+
+.mic-toggle.active {
+    color: #ef4444;
+}
+
+/* Sidebar Styling */
+.assistant-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.sidebar-section-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 1.25rem !important;
+    padding: 1.5rem !important;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-section-card:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+/* Resource Items */
+.resource-pill {
+    padding: 0.8rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+}
+
+.resource-pill:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Overrides */
+@media (max-width: 1200px) {
+    .study-assistant-grid {
+        grid-template-columns: 1fr 300px;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .study-assistant-container {
+        padding: 1rem;
+        padding-top: 5rem;
+        height: auto;
+    }
+    
+    .study-assistant-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .chat-main-card {
+        height: 600px;
+    }
+    
+    .assistant-sidebar {
+        overflow: visible;
+    }
+}
+
+@media (max-width: 600px) {
+    .message-bubble {
+        max-width: 95%;
+    }
+    
+    .chat-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .messages-container {
+        padding: 1rem;
+    }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+}

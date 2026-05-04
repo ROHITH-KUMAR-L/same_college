@@ -20,7 +20,7 @@ import {
 import { ref, onValue } from 'firebase/database';
 import { database } from '../firebase';
 import { getAIResponse } from '../utils/ai';
-import './Admin.css';
+import './StudyAssistant.css';
 
 export default function StudyAssistant() {
     const { user } = useAuthContext();
@@ -111,19 +111,22 @@ export default function StudyAssistant() {
     };
 
     return (
-        <div className="admin-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', paddingTop: '5rem', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem', flex: 1, overflow: 'hidden' }}>
+        <div className="study-assistant-container">
+            <div className="study-assistant-grid">
                 
                 {/* Chat Area */}
-                <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem', overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="chat-main-card">
+                    <div className="chat-header">
+                        <div className="chat-header-info">
                             <BrainCircuit size={28} color="var(--accent-color)" />
                             <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0 }}>AI Study Assistant</h2>
-                                <span style={{ fontSize: '0.75rem', color: isTyping ? 'var(--accent-color)' : '#22c55e', fontWeight: '700' }}>
-                                    {isTyping ? '● AI is thinking...' : '● Online & Ready'}
-                                </span>
+                                <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'white', margin: 0 }}>AI Study Assistant</h2>
+                                <div className="ai-status-indicator">
+                                    <div className={`ai-status-dot ${isTyping ? 'thinking' : ''}`}></div>
+                                    <span style={{ color: isTyping ? 'var(--accent-color)' : '#22c55e' }}>
+                                        {isTyping ? 'AI is thinking...' : 'Online & Ready'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         
@@ -131,12 +134,14 @@ export default function StudyAssistant() {
                         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '0.25rem', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <button 
                                 onClick={() => setUseOllama(false)}
+                                className={`model-btn ${!useOllama ? 'active' : ''}`}
                                 style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '0.7rem', fontWeight: '800', background: !useOllama ? 'var(--accent-color)' : 'transparent', color: !useOllama ? 'black' : 'var(--text-muted)', border: 'none', transition: 'all 0.2s' }}
                             >
                                 GROQ
                             </button>
                             <button 
                                 onClick={() => setUseOllama(true)}
+                                className={`model-btn ${useOllama ? 'active' : ''}`}
                                 style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '0.7rem', fontWeight: '800', background: useOllama ? 'var(--accent-color)' : 'transparent', color: useOllama ? 'black' : 'var(--text-muted)', border: 'none', transition: 'all 0.2s' }}
                             >
                                 OLLAMA
@@ -144,55 +149,46 @@ export default function StudyAssistant() {
                         </div>
                     </div>
 
-                    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '0.5rem' }} className="custom-scrollbar">
+                    <div className="messages-container custom-scrollbar">
                         {messages.map((msg, idx) => (
-                            <div key={idx} style={{ 
-                                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                maxWidth: '80%',
-                                background: msg.role === 'user' ? 'var(--accent-color)' : 'rgba(255,255,255,0.03)',
-                                color: msg.role === 'user' ? 'black' : 'white',
-                                padding: '1rem 1.25rem',
-                                borderRadius: msg.role === 'user' ? '20px 20px 0 20px' : '20px 20px 20px 0',
-                                fontSize: '0.95rem',
-                                lineHeight: '1.5',
-                                border: msg.role === 'assistant' ? '1px solid rgba(255,255,255,0.05)' : 'none'
-                            }}>
+                            <div key={idx} className={`message-bubble ${msg.role}`}>
                                 {msg.content}
                             </div>
                         ))}
                         <div ref={chatEndRef} />
                     </div>
 
-                    <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                        <div style={{ flex: 1, position: 'relative' }}>
-                            <input 
-                                type="text" 
-                                placeholder="Ask about concepts, request a quiz, or summarize notes..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '1rem 3.5rem 1rem 1.25rem', color: 'white', fontSize: '0.95rem' }}
-                            />
-                            <button 
-                                onClick={toggleListening}
-                                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: isListening ? '#ef4444' : 'var(--text-muted)' }}
-                            >
-                                {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+                    <div className="chat-input-wrapper">
+                        <div className="input-container">
+                            <div className="premium-input-box">
+                                <input 
+                                    type="text" 
+                                    placeholder="Ask about concepts, request a quiz, or summarize notes..."
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                />
+                                <button 
+                                    onClick={toggleListening}
+                                    className={`mic-toggle ${isListening ? 'active' : ''}`}
+                                >
+                                    {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+                                </button>
+                            </div>
+                            <button className="btn-primary" onClick={handleSend} style={{ borderRadius: '16px', padding: '1.2rem' }}>
+                                <Send size={20} />
                             </button>
                         </div>
-                        <button className="btn-primary" onClick={handleSend} style={{ borderRadius: '16px', padding: '1rem' }}>
-                            <Send size={20} />
-                        </button>
                     </div>
                 </div>
 
                 {/* Sidebar Features */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="assistant-sidebar custom-scrollbar">
                     {/* Material Upload */}
-                    <div className="admin-card" style={{ padding: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+                    <div className="sidebar-section-card">
+                        <div className="section-header">
                             <Upload size={18} color="var(--accent-color)" />
-                            <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', margin: 0 }}>Knowledge Base</h3>
+                            <h3>Knowledge Base</h3>
                         </div>
                         <input 
                             type="file" 
@@ -223,24 +219,17 @@ export default function StudyAssistant() {
                     </div>
 
                     {/* Workspace Resources */}
-                    <div className="admin-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', margin: 0 }}>Workspace Resources</h3>
+                    <div className="sidebar-section-card" style={{ maxHeight: '350px', display: 'flex', flexDirection: 'column' }}>
+                        <div className="section-header">
+                            <MessageSquare size={18} color="var(--accent-color)" />
+                            <h3>Workspace Resources</h3>
+                        </div>
                         <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }} className="custom-scrollbar">
                             {workspaceResources.length > 0 ? workspaceResources.map(res => (
                                 <div 
                                     key={res.id} 
                                     onClick={() => attachWorkspaceResource(res)}
-                                    style={{ 
-                                        padding: '0.75rem', 
-                                        background: 'rgba(255,255,255,0.02)', 
-                                        borderRadius: '12px', 
-                                        fontSize: '0.8rem', 
-                                        color: 'var(--text-muted)',
-                                        cursor: 'pointer',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    className="tool-item-hover"
+                                    className="resource-pill"
                                 >
                                     {res.title}
                                 </div>
@@ -251,8 +240,11 @@ export default function StudyAssistant() {
                     </div>
 
                     {/* Quick Tools */}
-                    <div className="admin-card" style={{ padding: '1.5rem' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', marginBottom: '1.25rem' }}>Quick Study Tools</h3>
+                    <div className="sidebar-section-card">
+                        <div className="section-header">
+                            <Zap size={18} color="var(--accent-color)" />
+                            <h3>Quick Study Tools</h3>
+                        </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             <ToolItem icon={<Sparkles size={16} />} title="Generate Mock Test" />
                             <ToolItem icon={<BookOpen size={16} />} title="Syllabus Breakdown" />
@@ -261,8 +253,11 @@ export default function StudyAssistant() {
                     </div>
 
                     {/* Active Topics */}
-                    <div className="admin-card" style={{ padding: '1.5rem', flex: 1 }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', marginBottom: '1.25rem' }}>Active Learning Topics</h3>
+                    <div className="sidebar-section-card" style={{ flex: 1 }}>
+                        <div className="section-header">
+                            <Cpu size={18} color="var(--accent-color)" />
+                            <h3>Learning Topics</h3>
+                        </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <span className="premium-badge" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>Normalization</span>
                             <span className="premium-badge" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.2)' }}>SQL Joins</span>

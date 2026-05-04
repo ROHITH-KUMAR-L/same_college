@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -23,6 +24,18 @@ import VoiceAssistant from './components/VoiceAssistant';
 import './App.css';
 
 function App() {
+  // Force unregister stale service workers that block local AI requests
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log('Unregistered stale ServiceWorker');
+        }
+      });
+    }
+  }, []);
+
   return (
     <Router>
       <AuthProvider>

@@ -79,7 +79,7 @@ const VoiceAssistant = () => {
         formData.append('file', audioBlob, 'recording.wav');
 
         try {
-            const res = await fetch('http://localhost:8000/api/v1/assistant/voice-chat', {
+            const res = await fetch(`http://localhost:8000/api/v1/assistant/voice-chat?t=${Date.now()}`, {
                 method: 'POST',
                 body: formData
             });
@@ -159,10 +159,7 @@ const VoiceAssistant = () => {
                     <div className="voice-footer">
                         <button 
                             className={`mic-trigger ${isRecording ? 'active' : ''}`}
-                            onMouseDown={startRecording}
-                            onMouseUp={stopRecording}
-                            onTouchStart={startRecording}
-                            onTouchEnd={stopRecording}
+                            onClick={isRecording ? stopRecording : startRecording}
                             disabled={isProcessing}
                         >
                             {isRecording ? <Square size={24} fill="white" /> : <Mic size={24} />}
@@ -172,7 +169,7 @@ const VoiceAssistant = () => {
                             </div>
                         </button>
                         <p className="mic-hint">
-                            {isRecording ? 'Release to send' : 'Hold to speak'}
+                            {isRecording ? 'Click to stop' : 'Click to start'}
                         </p>
                     </div>
                 </div>

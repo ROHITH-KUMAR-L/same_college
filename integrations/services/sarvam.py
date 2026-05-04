@@ -22,7 +22,7 @@ async def speech_to_text(audio_content: bytes) -> Optional[str]:
     }
     data = {
         "language_code": "en-IN",
-        "model": "saaras_v1" # Saaras v1 or v3 based on documentation
+        "model": "saaras:v3"
     }
     
     async with httpx.AsyncClient() as client:
@@ -39,37 +39,40 @@ async def speech_to_text(audio_content: bytes) -> Optional[str]:
 
 async def text_to_speech(text: str) -> Optional[str]:
     """
-    Converts text to speech base64 string using Sarvam Bulbul v3 API.
+    Converts text to speech base64 string using Sarvam Bulbul v3 API (Streaming).
     """
     api_key = get_api_key()
     if not api_key:
         return None
         
-    url = "https://api.sarvam.ai/text-to-speech"
+    url = "https://api.sarvam.ai/text-to-speech/stream"
     headers = {
         "api-subscription-key": api_key,
         "Content-Type": "application/json"
     }
     
     payload = {
-        "inputs": [text],
+        "text": text,
         "target_language_code": "en-IN",
-        "speaker": "meera", # A popular English-IN voice
-        "pitch": 0,
-        "pace": 1.0,
-        "loudness": 1.5,
-        "speech_sample_rate": 16000,
-        "enable_preprocessing": True,
-        "model": "bulbul:v1"
+        "speaker": "meera", 
+        "model": "bulbul:v3",
+        "pace": 1.1,
+        "speech_sample_rate": 22050,
+        "output_audio_codec": "mp3",
+        "enable_preprocessing": True
     }
     
     async with httpx.AsyncClient() as client:
         try:
+            # We use the streaming endpoint but collect it into one base64 string
             response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            result = response.json()
-            # Sarvam returns audio_content as a base64 string
-            return result.get("audios", [None])[0]
+            if response.status_code != 200:
+                print(f"Sarvam TTS Error ({response.status_code}): {response.text}")
+                return None
+            
+            # The streaming endpoint returns raw binary audio
+            audio_content = response.content
+            return base64.b64encode(audio_content).decode('utf-8')
         except Exception as e:
-            print(f"Sarvam TTS Error: {e}")
+            print(f"Sarvam TTS Network Error: {e}")
             return None

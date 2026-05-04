@@ -9,19 +9,43 @@ export default function ResourceManager() {
     const [materials, setMaterials] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState('CS401');
     const [isUploading, setIsUploading] = useState(false);
+    const [branches, setBranches] = useState([]);
+    const [syllabuses, setSyllabuses] = useState([]);
     
     // New Material State
     const [fileName, setFileName] = useState('');
-    const [fileType, setFileType] = useState('pdf');
+    const [fileType, setFileType] = useState('Note'); // 'Note' or 'Paper'
     const [fileUrl, setFileUrl] = useState('');
-    const [tags, setTags] = useState('');
+    const [selBranch, setSelBranch] = useState('');
+    const [selSyllabus, setSelSyllabus] = useState('C-20');
+    const [selSemester, setSelSemester] = useState('1st Sem');
+    const [chapter, setChapter] = useState('');
 
     useEffect(() => {
-        const matRef = ref(database, `course_materials/${selectedCourse}`);
+        // Fetch Master Data
+        const bRef = ref(database, 'branches');
+        const sRef = ref(database, 'syllabuses');
+        onValue(bRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                setBranches(Object.keys(data).map(k => ({ id: k, title: typeof data[k] === 'string' ? data[k] : data[k].title })));
+            }
+        });
+        onValue(sRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                setSyllabuses(Object.keys(data).map(k => ({ id: k, title: typeof data[k] === 'string' ? data[k] : data[k].title })));
+            }
+        });
+
+        // Fetch Materials - Now from Global Node
+        const matRef = ref(database, 'resources/notes');
         const unsubscribe = onValue(matRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 const matList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                // Filter only materials uploaded by this faculty or relevant to their courses if needed
+                // For now, show all to link with admin
                 setMaterials(matList.sort((a, b) => b.timestamp - a.timestamp));
             } else {
                 setMaterials([]);
@@ -29,35 +53,41 @@ export default function ResourceManager() {
         });
 
         return () => unsubscribe();
-    }, [selectedCourse]);
+    }, []);
 
     const handleSimulateUpload = async (e) => {
         e.preventDefault();
-        if (!fileName || !fileUrl) return;
+        if (!fileName || !fileUrl || !selBranch) return;
 
         setIsUploading(true);
 
-        // Simulate upload delay
-        setTimeout(async () => {
-            const matRef = push(ref(database, `course_materials/${selectedCourse}`));
-            await set(matRef, {
-                fileName,
-                type: fileType,
-                url: fileUrl,
-                tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-                uploadedBy: user?.uid,
-                timestamp: Date.now()
-            });
+        // Link with Admin node: resources/notes
+        const matRef = push(ref(database, 'resources/notes'));
+        await set(matRef, {
+            title: fileName,
+            url: fileUrl,
+            branch: selBranch,
+            syllabus: selSyllabus,
+            semester: selSemester,
+            chapter: chapter || 'General',
+            type: fileType,
+            isFolder: false,
+            parentId: 'root',
+            uploadedBy: user?.displayName || user?.email,
+            facultyUid: user?.uid,
+            timestamp: Date.now()
+        });
 
-            setIsUploading(false);
-            setFileName('');
-            setFileUrl('');
-            setTags('');
-        }, 1500);
+        setIsUploading(false);
+        setFileName('');
+        setFileUrl('');
+        setChapter('');
     };
 
     const handleDelete = async (id) => {
-        await remove(ref(database, `course_materials/${selectedCourse}/${id}`));
+        if (window.confirm('Are you sure you want to delete this resource?')) {
+            await remove(ref(database, `resources/notes/${id}`));
+        }
     };
 
     return (
@@ -65,55 +95,77 @@ export default function ResourceManager() {
             <div className="admin-card" style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white' }}>Upload Course Materials</h2>
-                    <select 
-                        value={selectedCourse} 
-                        onChange={(e) => setSelectedCourse(e.target.value)}
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '8px', outline: 'none' }}
-                    >
-                        <option value="CS401">CS401 - Advanced ML</option>
-                        <option value="CS302">CS302 - Database Systems</option>
-                    </select>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>LINKED TO GLOBAL HUB</div>
                 </div>
                 
                 <form onSubmit={handleSimulateUpload} style={{ border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '16px', padding: '2rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px', margin: '0 auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '500px', margin: '0 auto' }}>
                         {isUploading ? (
                             <div style={{ textAlign: 'center', padding: '2rem' }}>
                                 <Loader size={48} color="var(--accent-color)" style={{ margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-                                <h3 style={{ color: 'white' }}>Uploading...</h3>
+                                <h3 style={{ color: 'white' }}>Uploading to Same College Hub...</h3>
                             </div>
                         ) : (
                             <>
                                 <UploadCloud size={48} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
-                                <input type="text" placeholder="File / Resource Name" value={fileName} onChange={e => setFileName(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
-                                <select value={fileType} onChange={e => setFileType(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }}>
-                                    <option value="pdf">PDF Document</option>
-                                    <option value="link">External Link</option>
-                                    <option value="doc">Word Doc</option>
-                                </select>
-                                <input type="text" placeholder="URL or Firebase Storage Path" value={fileUrl} onChange={e => setFileUrl(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
-                                <input type="text" placeholder="Tags (comma separated)" value={tags} onChange={e => setTags(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
-                                <button className="btn-primary" type="submit" style={{ marginTop: '0.5rem' }}>Upload & Sync to AI</button>
+                                
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <input type="text" placeholder="Resource Title" value={fileName} onChange={e => setFileName(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
+                                    <select value={fileType} onChange={e => setFileType(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }}>
+                                        <option value="Note">Note / Study Material</option>
+                                        <option value="Paper">Question Paper</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <select value={selBranch} onChange={e => setSelBranch(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }}>
+                                        <option value="">Select Branch</option>
+                                        <option value="Common">Common to All</option>
+                                        {branches.map(b => <option key={b.id} value={b.title}>{b.title}</option>)}
+                                    </select>
+                                    <select value={selSemester} onChange={e => setSelSemester(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }}>
+                                        <option value="1st Sem">1st Semester</option>
+                                        <option value="2nd Sem">2nd Semester</option>
+                                        <option value="3rd Sem">3rd Semester</option>
+                                        <option value="4th Sem">4th Semester</option>
+                                        <option value="5th Sem">5th Semester</option>
+                                        <option value="6th Sem">6th Semester</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <select value={selSyllabus} onChange={e => setSelSyllabus(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }}>
+                                        {syllabuses.map(s => <option key={s.id} value={s.title}>{s.title} Scheme</option>)}
+                                    </select>
+                                    <input type="text" placeholder="Chapter / Topic (Optional)" value={chapter} onChange={e => setChapter(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
+                                </div>
+
+                                <input type="text" placeholder="Direct Download URL (e.g. Google Drive Link)" value={fileUrl} onChange={e => setFileUrl(e.target.value)} required style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '8px', outline: 'none' }} />
+                                
+                                <button className="btn-primary" type="submit" style={{ marginTop: '0.5rem' }}>Upload to Global Hub</button>
                             </>
                         )}
                     </div>
                 </form>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <h3 style={{ color: 'white', fontSize: '1rem', marginBottom: '0.5rem' }}>Existing Materials for {selectedCourse}</h3>
-                    {materials.map(mat => (
+                    <h3 style={{ color: 'white', fontSize: '1rem', marginBottom: '0.5rem' }}>Recently Uploaded Global Materials</h3>
+                    {materials.slice(0, 10).map(mat => (
                         <div key={mat.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                {mat.type === 'link' ? <LinkIcon size={24} color="#3b82f6" /> : <File size={24} color="#ef4444" />}
+                                {mat.type === 'Paper' ? <FileSpreadsheet size={24} color="#3b82f6" /> : <File size={24} color="#ef4444" />}
                                 <div>
-                                    <div style={{ color: 'white', fontWeight: 'bold' }}>{mat.fileName}</div>
-                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{selectedCourse} • {new Date(mat.timestamp).toLocaleDateString()}</div>
+                                    <div style={{ color: 'white', fontWeight: 'bold' }}>{mat.title}</div>
+                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{mat.branch} • {mat.semester} • {mat.syllabus}</div>
                                 </div>
                             </div>
-                            <button onClick={() => handleDelete(mat.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>{new Date(mat.timestamp).toLocaleDateString()}</span>
+                                <button onClick={() => handleDelete(mat.id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                            </div>
                         </div>
                     ))}
-                    {materials.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No materials uploaded yet.</div>}
+                    {materials.length === 0 && <div style={{ color: 'var(--text-muted)' }}>No materials found in the global hub.</div>}
                 </div>
             </div>
 

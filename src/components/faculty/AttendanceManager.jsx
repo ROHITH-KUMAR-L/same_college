@@ -6,7 +6,14 @@ import { database } from '../../firebase';
 
 export default function AttendanceManager() {
     const [activeTab, setActiveTab] = useState('qr');
-    const [selectedCourse, setSelectedCourse] = useState('CS401');
+    const subjects = [
+        { code: 'CS302', name: 'Database Systems' },
+        { code: 'CS401', name: 'Software Engineering' },
+        { code: 'CS303', name: 'Computer Networks' },
+        { code: 'CS402', name: 'Web Programming' }
+    ];
+
+    const [selectedCourse, setSelectedCourse] = useState(subjects[0].code);
     const [isSessionActive, setIsSessionActive] = useState(false);
     const [sessionId, setSessionId] = useState(null);
     
@@ -115,8 +122,7 @@ export default function AttendanceManager() {
                     }}
                     style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '8px', outline: 'none' }}
                 >
-                    <option value="CS401">CS401 - Advanced ML</option>
-                    <option value="CS302">CS302 - Database Systems</option>
+                    {subjects.map(s => <option key={s.code} value={s.code}>{s.code} - {s.name}</option>)}
                 </select>
             </div>
 
@@ -133,26 +139,55 @@ export default function AttendanceManager() {
             {/* QR Tab */}
             {activeTab === 'qr' && (
                 <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <button
-                        onClick={toggleSession}
-                        className={isSessionActive ? "btn-outline" : "btn-primary"}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto 2rem' }}
-                    >
-                        {isSessionActive ? <><StopCircle size={18} /> Stop Session</> : <><PlayCircle size={18} /> Start Session</>}
-                    </button>
-
                     {isSessionActive ? (
                         <>
                             <div style={{ background: 'white', padding: '2rem', display: 'inline-block', borderRadius: '16px', marginBottom: '1.5rem' }}>
                                 <QRCodeSVG value={`${window.location.origin}/mark-attendance?course=${selectedCourse}&session=${sessionId}`} size={256} />
                             </div>
-                            <h3 style={{ color: '#22c55e', fontSize: '1.25rem', marginBottom: '0.5rem' }}>Session Active — {selectedCourse}</h3>
-                            <p style={{ color: 'var(--text-muted)' }}>Students scan to instantly mark attendance.</p>
+                            <h3 style={{ color: '#22c55e', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Session Active — {subjects.find(s => s.code === selectedCourse)?.name}</h3>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Students scan to instantly mark attendance for {selectedCourse}.</p>
+                            
+                            <button
+                                onClick={toggleSession}
+                                className="btn-outline"
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
+                            >
+                                <StopCircle size={18} /> Stop Session & Clear QR
+                            </button>
                         </>
                     ) : (
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ color: 'white', fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Active Session</h3>
-                            <p style={{ color: 'var(--text-muted)' }}>Start a session to generate the live QR code for students to scan.</p>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '4rem 2rem', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)', maxWidth: '500px', margin: '0 auto' }}>
+                            <h3 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '1rem' }}>Initialize Session</h3>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Select the subject to generate a secure attendance QR code.</p>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
+                                <select
+                                    value={selectedCourse}
+                                    onChange={(e) => setSelectedCourse(e.target.value)}
+                                    style={{ 
+                                        width: '100%',
+                                        background: 'rgba(255,255,255,0.05)', 
+                                        color: 'white', 
+                                        border: '1px solid rgba(255,255,255,0.1)', 
+                                        padding: '1rem', 
+                                        borderRadius: '12px', 
+                                        outline: 'none',
+                                        fontSize: '1rem'
+                                    }}
+                                >
+                                    {subjects.map(s => (
+                                        <option key={s.code} value={s.code}>{s.code} - {s.name}</option>
+                                    ))}
+                                </select>
+
+                                <button
+                                    onClick={toggleSession}
+                                    className="btn-primary"
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1rem', fontSize: '1rem' }}
+                                >
+                                    <PlayCircle size={20} /> Generate QR Code
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

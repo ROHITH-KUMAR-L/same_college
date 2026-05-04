@@ -8,9 +8,9 @@ import Home from './pages/Home';
 import Notes from './pages/Notes';
 import Profile from './pages/Profile';
 import DCET from './pages/DCET';
-import RankPredictor from './pages/RankPredictor';
-import Contribute from './pages/Contribute';
+import Timetable from './pages/Timetable';
 import Admin from './pages/Admin';
+import Faculty from './pages/Faculty';
 import PrivacyPolicy from './pages/Legal';
 import Papers from './pages/Papers';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,12 +21,7 @@ function App() {
     <Router>
       <AuthProvider>
         <div className="app-container">
-          {/* Background Branding Watermark for all pages */}
-          <div className="bg-branding-watermark flex-center">
-            <img src="/favicon.png" alt="" className="watermark-logo" />
-            <span className="watermark-x">×</span>
-            <span>DTEHub</span>
-          </div>
+
           <Navbar />
           <main className="main-content">
             <Routes>
@@ -34,10 +29,10 @@ function App() {
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="/papers" element={<ProtectedRoute><Papers /></ProtectedRoute>} />
               <Route path="/dcet" element={<ProtectedRoute><DCET /></ProtectedRoute>} />
-              <Route path="/rank-predictor" element={<ProtectedRoute><RankPredictor /></ProtectedRoute>} />
-              <Route path="/contribute" element={<Contribute />} />
+              <Route path="/timetable" element={<ProtectedRoute><Timetable /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+              <Route path="/faculty" element={<ProtectedRoute><Faculty /></ProtectedRoute>} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
           </main>

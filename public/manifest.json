@@ -1,6 +1,6 @@
 {
-  "name": "DTEHub",
-  "short_name": "DTEHub",
+  "name": "Same College",
+  "short_name": "Same College",
   "description": "Premium study platform for Diploma students. Access notes, question papers, and DCET resources.",
   "start_url": "./",
   "display": "standalone",

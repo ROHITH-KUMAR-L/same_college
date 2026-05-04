@@ -6,6 +6,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { database } from '../firebase';
 import { ref, onValue, push, set } from 'firebase/database';
 import Footer from '../components/Footer';
+import LoginModal from '../components/LoginModal';
 import './Home.css';
 
 // Simple Counter Component for the Stats
@@ -68,6 +69,7 @@ export default function Home() {
     const [college, setCollege] = useState('');
     const [rating, setRating] = useState(5);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoginOpen, setIsLoginOpen] = useState(false);
 
     // Clear feedback persistence on mount/render if modal is shown
     useEffect(() => {
@@ -107,8 +109,8 @@ export default function Home() {
             const newEntryRef = push(testRef);
             await set(newEntryRef, {
                 name: user.displayName || 'Anonymous student',
-                role: 'DTEHub Student',
-                college: college.trim() || 'DTEHub Community',
+                role: 'Same College Student',
+                college: college.trim() || 'Same College Community',
                 message: feedbackMsg,
                 photoUrl: user.photoURL || '',
                 rating: rating,
@@ -133,12 +135,13 @@ export default function Home() {
                     <div className="main-text-branding">
                         <h1 className="hub-title-welcome">
                             <span className="welcome-text">Welcome to </span>
-                            <span className="dte-text">DTE</span><span className="hub-text">Hub</span>
+                            <span className="dte-text">Same</span><span className="hub-text"> College</span>
                         </h1>
                     </div>
                     <p className="hero-tagline">
                         The ultimate study hub for Diploma students. Access premium notes, past question papers, and DCET Question papers from trusted academic resources—all centralized for your success.
                     </p>
+
 
                     <button
                         className="btn-explore"
@@ -274,11 +277,11 @@ export default function Home() {
 
                         {!user ? (
                             <div className="login-prompt-feedback">
-                                <p>Please sign in to leave a testimonial about DTEHub.</p>
+                                <p>Please sign in to leave a testimonial about Same College.</p>
                                 <button className="btn-primary" onClick={async () => {
                                     sessionStorage.setItem('open_feedback_post_login', 'true');
-                                    await loginWithGoogle();
-                                }}>Sign In with Google</button>
+                                    setIsLoginOpen(true);
+                                }}>Sign In</button>
                             </div>
                         ) : (
                             <div className="feedback-form-compact">
@@ -345,6 +348,7 @@ export default function Home() {
                 </div>
             )}
 
+            <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
             <Footer />
         </div>
     );

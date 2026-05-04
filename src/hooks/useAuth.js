@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set, get, serverTimestamp, runTransaction } from 'firebase/database';
 import { auth, googleProvider, database } from '../firebase';
 
@@ -8,21 +8,18 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Info: Standard browser log, not an error - adblockers often block Google tracking logs.
-    // DTEHub Auth engine is initializing...
-    console.info("DTEHub Auth: Initializing high-reliability session check...");
+    console.info("Same College Auth: Initializing high-reliability session check...");
 
-    // Check for redirect results (handles return from redirect-based sign-ins)
     const handleRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          console.info("DTEHub Auth: Successfully resolved redirect credentials.");
+          console.info("Same College Auth: Successfully resolved redirect credentials.");
           setUser(result.user);
         }
       } catch (error) {
         if (error.code !== 'auth/popup-closed-by-user') {
-          console.error("DTEHub Auth: Redirect resolution anomaly:", error);
+          console.error("Same College Auth: Redirect resolution anomaly:", error);
         }
       }
     };
@@ -31,36 +28,53 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          // Set user immediately so protected routes work right away
           setUser(firebaseUser);
-          // Update user profile in Realtime Database in the background
-          // These operations should NOT block auth state resolution
           try {
             const userRef = ref(database, `users/${firebaseUser.uid}`);
             const snapshot = await get(userRef);
             const existingData = snapshot.val() || {};
 
-            // If it's a new user, increment the global verified users counter
+            // Determine Role based on Email
+            let role = "STUDENT";
+            const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+            const facultyEmail = import.meta.env.VITE_FACULTY_EMAIL;
+            const studentEmail = import.meta.env.VITE_STUDENT_EMAIL;
+
+            if (firebaseUser.email === adminEmail) {
+              role = "ADMIN";
+            } else if (firebaseUser.email === facultyEmail) {
+              role = "FACULTY";
+            } else if (firebaseUser.email === studentEmail) {
+              role = "STUDENT";
+            } else if (existingData.role) {
+              role = existingData.role;
+            }
+
+
             if (!existingData.createdAt) {
               const statsRef = ref(database, 'stats/totalVerifiedUsers');
               runTransaction(statsRef, (count) => {
                 return (count || 0) + 1;
-              }).catch(err => console.error('DTEHub Auth: Verification metric error:', err));
+              }).catch(err => console.error('Same College Auth: Verification metric error:', err));
             }
 
-            await set(userRef, {
+            const userData = {
               ...existingData,
               uid: firebaseUser.uid,
-              displayName: firebaseUser.displayName,
+              displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
               email: firebaseUser.email,
-              photoURL: firebaseUser.photoURL,
+              photoURL: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${firebaseUser.email}&background=random`,
               emailVerified: firebaseUser.emailVerified || false,
               lastLoginAt: serverTimestamp(),
+              role: role,
               ...(existingData.createdAt ? {} : { createdAt: serverTimestamp() }),
-            });
+            };
+
+            await set(userRef, userData);
+            // Update local user state with role
+            setUser({ ...firebaseUser, role });
           } catch (dbError) {
-            // Database write errors should NOT block user from accessing the app
-            console.error('DTEHub Auth: Profile sync anomaly:', dbError);
+            console.error('Same College Auth: Profile sync anomaly:', dbError);
           }
         } else {
           setUser(null);
@@ -75,22 +89,40 @@ export function useAuth() {
 
   const loginWithGoogle = async () => {
     try {
-      console.info("DTEHub Auth: Initiating secure Google handshake...");
-      // Try popup first (best for desktop/unrestricted mobile)
+      console.info("Same College Auth: Initiating secure Google handshake...");
       try {
         const result = await signInWithPopup(auth, googleProvider);
         return result.user;
       } catch (popupError) {
-        // Fallback to redirect if popup is blocked or fails on mobile
         if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/cancelled-popup-request') {
-          console.info("DTEHub Auth: Popup restricted. Transitioning to secure redirect flow.");
+          console.info("Same College Auth: Popup restricted. Transitioning to secure redirect flow.");
           await signInWithRedirect(auth, googleProvider);
         } else {
           throw popupError;
         }
       }
     } catch (error) {
-      console.error('DTEHub Auth: Handshake failed:', error);
+      console.error('Same College Auth: Handshake failed:', error);
+      throw error;
+    }
+  };
+
+  const loginWithEmail = async (email, password) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return result.user;
+    } catch (error) {
+      console.error('Email login error:', error);
+      throw error;
+    }
+  };
+
+  const registerWithEmail = async (email, password) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      return result.user;
+    } catch (error) {
+      console.error('Email registration error:', error);
       throw error;
     }
   };
@@ -104,5 +136,6 @@ export function useAuth() {
     }
   };
 
-  return { user, loading, loginWithGoogle, logout };
+  return { user, loading, loginWithGoogle, loginWithEmail, registerWithEmail, logout };
 }
+

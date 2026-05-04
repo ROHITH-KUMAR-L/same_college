@@ -1,12 +1,11 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, initializeAnalytics, isSupported } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
@@ -14,10 +13,8 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Safety Check: Ensure environment variables are loaded
-if (!firebaseConfig.apiKey) {
-  console.error("DTEHub: Firebase API Key is missing! Environment variables (VITE_...) must be set for the app to initialize. Ensure your .env file exists locally or deployment environment variables are configured.");
-}
+
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -37,4 +34,4 @@ isSupported().then(supported => {
   }
 }).catch(() => { });
 
-export { app, analytics, auth, googleProvider, database };
+export { app, analytics, auth, googleProvider, database, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail };

@@ -9,7 +9,7 @@ const InstallPWA = () => {
 
     useEffect(() => {
         const handler = (e) => {
-            console.log('DTEHub PWA: App installation prompt caught.');
+            console.log('Same College PWA: App installation prompt caught.');
             e.preventDefault();
             setDeferredPrompt(e);
             setIsVisible(true);
@@ -31,7 +31,7 @@ const InstallPWA = () => {
         if (!deferredPrompt) {
             // Check if already installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
-                alert("DTEHub is already installed on your device!");
+                alert("Same College is already installed on your device!");
             } else {
                 alert("To install the app:\n\n1. Check if your browser supports PWAs (Chrome/Edge recommended)\n2. If on mobile, use 'Add to Home Screen' from your browser menu.");
             }
@@ -42,14 +42,14 @@ const InstallPWA = () => {
             setInstalling(true);
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`DTEHub PWA: Installation outcome: ${outcome}`);
+            console.log(`Same College PWA: Installation outcome: ${outcome}`);
             
             if (outcome === 'accepted') {
                 setDeferredPrompt(null);
                 setIsVisible(false);
             }
         } catch (err) {
-            console.error("DTEHub PWA: Installation error:", err);
+            console.error("Same College PWA: Installation error:", err);
         } finally {
             setInstalling(false);
         }

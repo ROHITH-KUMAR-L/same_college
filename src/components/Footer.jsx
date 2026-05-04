@@ -19,7 +19,7 @@ export default function Footer() {
                     </div>
                     <center>
                         <Link to="/" className="logo-link">
-                            <span>DTE<span style={{ color: 'var(--accent-color)' }}>Hub</span></span>
+                            <span>Same <span style={{ color: 'var(--accent-color)' }}>College</span></span>
                         </Link>
                     </center>
                 </div>
@@ -43,12 +43,6 @@ export default function Footer() {
                                 </div>
                                 <span>LinkedIn</span>
                             </a>
-                            <a href="https://github.com/Tech-Astra/DTEHub" target="_blank" rel="noopener noreferrer" className="contact-link-item">
-                                <div className="contact-icon-wrapper">
-                                    <Github size={20} />
-                                </div>
-                                <span>GitHub</span>
-                            </a>
                             <a href="mailto:contactus.techastra@gmail.com" className="contact-link-item">
                                 <div className="contact-icon-wrapper">
                                     <Mail size={20} />
@@ -59,6 +53,7 @@ export default function Footer() {
                     </div>
                 </div>
             )}
+
         </>
     );
 }

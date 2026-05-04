@@ -15,10 +15,10 @@ import IframeModal from '../components/IframeModal';
 import CustomSelect from '../components/CustomSelect';
 import './Admin.css';
 
-// Admin allowed list
+// Admin allowed list (fetched from environment)
 const ADMIN_EMAILS = [
-    'shivarajmani2005@gmail.com',
-    'vivekvernekar02@gmail.com',
+    import.meta.env.VITE_ADMIN_EMAIL,
+    'vivekvernekar02@gmail.com', // Keeping secondary admins if needed, or I can just use one.
     'contactus.techastra@gmail.com'
 ];
 
@@ -29,7 +29,6 @@ const PIE_COLORS = ['#00f3ff', '#a855f7', '#FDE047'];
 const mockCategoryData = [
     { name: 'Notes', val: 0 },
     { name: 'Papers', val: 0 },
-    { name: 'DCET', val: 0 },
     { name: 'Links', val: 0 }
 ];
 
@@ -70,7 +69,7 @@ export default function Admin() {
     const [showTestimonialModal, setShowTestimonialModal] = useState(false);
     const [testimonialForm, setTestimonialForm] = useState({
         name: '',
-        role: 'DTEHub Student',
+        role: 'Same College Student',
         college: '',
         message: '',
         rating: 5,
@@ -185,14 +184,10 @@ export default function Admin() {
             });
 
             // Stats: Count resources directly from data nodes
-            let notesCount = 0, dcetCount = 0;
+            let notesCount = 0;
             const notesCountUnsub = onValue(ref(database, 'resources/notes'), (snap) => {
                 notesCount = snap.exists() ? Object.keys(snap.val()).length : 0;
-                setTotalResourcesCount(notesCount + dcetCount);
-            });
-            const dcetCountUnsub = onValue(ref(database, 'resources/dcet'), (snap) => {
-                dcetCount = snap.exists() ? Object.keys(snap.val()).length : 0;
-                setTotalResourcesCount(notesCount + dcetCount);
+                setTotalResourcesCount(notesCount);
             });
 
             // Fetch All Users - Only if Admin
@@ -218,7 +213,7 @@ export default function Admin() {
                 }
             });
 
-            if (['notes', 'dcet'].includes(activeTab)) {
+            if (activeTab === 'notes') {
                 // Fetch Resources for specific tab
                 const resourcesRef = ref(database, `resources/${activeTab}`);
                 unsubscribeResources = onValue(resourcesRef, (snapshot) => {
@@ -239,14 +234,11 @@ export default function Admin() {
                 // Approximate charts data logic
                 if (activeTab === 'dashboard') {
                     const computeCharts = async () => {
-                        let n = 0, d = 0;
+                        let n = 0;
                         const snapN = await get(ref(database, 'resources/notes'));
                         if (snapN.exists()) n = Object.keys(snapN.val()).length;
-                        const snapD = await get(ref(database, 'resources/dcet'));
-                        if (snapD.exists()) d = Object.keys(snapD.val()).length;
                         setCatData([
                             { name: 'Resources', val: n || 15 },
-                            { name: 'DCET', val: d || 8 },
                             { name: 'Guides', val: 4 }
                         ]);
                     };
@@ -604,9 +596,6 @@ export default function Admin() {
                 newResource.semester = semester;
                 newResource.chapter = chapter || 'General';
                 newResource.type = resourceType; // 'Note' or 'Paper'
-            } else if (activeTab === 'dcet') {
-                newResource.chapter = chapter || 'Preparation';
-                newResource.type = resourceType; // Added as per user request
             }
 
             if (editingId) {
@@ -665,7 +654,7 @@ export default function Admin() {
             const userCount = usersSnapshot.exists() ? Object.keys(usersSnapshot.val()).length : 0;
 
             let resourceCount = 0;
-            for (const cat of ['notes', 'dcet']) {
+            for (const cat of ['notes']) {
                 const snap = await get(ref(database, `resources/${cat}`));
                 if (snap.exists()) resourceCount += Object.keys(snap.val()).length;
             }
@@ -717,7 +706,7 @@ export default function Admin() {
                     <div className="sidebar-brand">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <Zap color="var(--accent-color)" size={28} />
-                            <span style={{ letterSpacing: '2px', fontFamily: 'monospace' }}>TECHASTRA</span>
+                            <span style={{ letterSpacing: '2px', fontFamily: 'monospace' }}>same college</span>
                         </div>
                         <button className="mobile-close-btn" onClick={() => setIsMobileMenuOpen(false)}>
                             <X size={24} />
@@ -731,9 +720,6 @@ export default function Admin() {
                         </button>
                         <button className={`sidebar-btn ${activeTab === 'notes' ? 'active' : ''}`} onClick={() => setActiveTab('notes')}>
                             <Database size={18} /> Resources
-                        </button>
-                        <button className={`sidebar-btn ${activeTab === 'dcet' ? 'active' : ''}`} onClick={() => setActiveTab('dcet')}>
-                            <Zap size={18} /> DCET
                         </button>
                         <button className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
                             <Users size={18} /> Users
@@ -763,8 +749,7 @@ export default function Admin() {
                                 <span>Admin</span> / {
                                     activeTab === 'dashboard' ? 'Overview' :
                                         activeTab === 'notes' ? 'Resources' :
-                                            activeTab === 'dcet' ? 'DCET Resources' :
-                                                activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
+                                            activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                                 }
                             </div>
                         </div>
@@ -1142,7 +1127,7 @@ export default function Admin() {
                             <div className="animate-fade">
                                 <div className="resource-management-header">
                                     <div className="header-left">
-                                        <h3>Manage {activeTab === 'notes' ? 'Resources' : 'DCET Materials'}</h3>
+                                        <h3>Manage Resources</h3>
                                         <p>Organize academic content across branch, syllabus, and semester</p>
                                     </div>
                                     <div className="resource-controls">
@@ -1269,7 +1254,7 @@ export default function Admin() {
                                                         {res.semester && <span className="res-tag">{res.semester}</span>}
                                                         <span className="res-tag">{res.branch}</span>
                                                         <span className="res-val">{res.chapter}</span>
-                                                        {['notes', 'dcet'].includes(activeTab) && (
+                                                        {activeTab === 'notes' && (
                                                             <span className="res-tag" style={{
                                                                 backgroundColor: res.type === 'Paper' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)',
                                                                 color: res.type === 'Paper' ? '#ef4444' : '#eab308'
@@ -1408,7 +1393,7 @@ export default function Admin() {
                                     {editingId ? <Edit2 size={18} /> : <Plus size={18} />}
                                 </div>
                                 <div>
-                                    <h3>{editingId ? 'Edit' : 'Add'} {activeTab === 'notes' ? 'Note / Paper' : 'DCET Resource'}</h3>
+                                    <h3>{editingId ? 'Edit' : 'Add'} Note / Paper</h3>
                                     <p>{editingId ? 'Update existing resource details' : 'Add a new resource to the collection'}</p>
                                 </div>
                             </div>

@@ -60,6 +60,18 @@
     "admins": {
       ".read": true,
       ".write": false
+    },
+    "faculty": {
+      ".read": true,
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'"
+    },
+    "testimonials": {
+      ".read": true,
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'"
+    },
+    "system_logs": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'"
     }
   }
 }

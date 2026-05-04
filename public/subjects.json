@@ -1,0 +1,351 @@
+{
+  "odd": {
+    "CSE": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Data Structures & Applications", "code": "18CS32", "hoursPerWeek": 4 },
+        { "name": "Digital Electronics", "code": "18CS33", "hoursPerWeek": 3 },
+        { "name": "Computer Organization", "code": "18CS34", "hoursPerWeek": 3 },
+        { "name": "Discrete Mathematics", "code": "18CS35", "hoursPerWeek": 4 }
+      ],
+      "5": [
+        { "name": "Automata Theory & Computability", "code": "18CS51", "hoursPerWeek": 4 },
+        { "name": "Computer Networks", "code": "18CS52", "hoursPerWeek": 3 },
+        { "name": "Database Management Systems", "code": "18CS53", "hoursPerWeek": 4 },
+        { "name": "Operating Systems", "code": "18CS54", "hoursPerWeek": 4 },
+        { "name": "Software Engineering & Project Mgmt", "code": "18CS55", "hoursPerWeek": 3 }
+      ],
+      "7": [
+        { "name": "Cryptography & Network Security", "code": "18CS71", "hoursPerWeek": 4 },
+        { "name": "Machine Learning", "code": "18CS72", "hoursPerWeek": 4 },
+        { "name": "Big Data Analytics", "code": "18CS73", "hoursPerWeek": 3 },
+        { "name": "Internet of Things", "code": "18CS74", "hoursPerWeek": 3 },
+        { "name": "Professional Ethics", "code": "18CS75", "hoursPerWeek": 2 }
+      ]
+    },
+    "ISE": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Data Structures & Applications", "code": "18IS32", "hoursPerWeek": 4 },
+        { "name": "Digital Logic Design", "code": "18IS33", "hoursPerWeek": 3 },
+        { "name": "Object Oriented Concepts with Java", "code": "18IS34", "hoursPerWeek": 4 },
+        { "name": "Discrete Mathematical Structures", "code": "18IS35", "hoursPerWeek": 3 }
+      ],
+      "5": [
+        { "name": "Web Technologies & Applications", "code": "18IS51", "hoursPerWeek": 3 },
+        { "name": "Computer Networks", "code": "18IS52", "hoursPerWeek": 3 },
+        { "name": "Database Management Systems", "code": "18IS53", "hoursPerWeek": 4 },
+        { "name": "Operating Systems", "code": "18IS54", "hoursPerWeek": 4 },
+        { "name": "Software Engineering", "code": "18IS55", "hoursPerWeek": 3 },
+        { "name": "Management & Entrepreneurship", "code": "18IS56", "hoursPerWeek": 2 }
+      ],
+      "7": [
+        { "name": "Cyber Security", "code": "18IS71", "hoursPerWeek": 4 },
+        { "name": "Data Warehousing & Mining", "code": "18IS72", "hoursPerWeek": 3 },
+        { "name": "Service Oriented Architecture", "code": "18IS73", "hoursPerWeek": 3 },
+        { "name": "Cloud Computing", "code": "18IS74", "hoursPerWeek": 3 }
+      ]
+    },
+    "ECE": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Network Analysis", "code": "18EC32", "hoursPerWeek": 4 },
+        { "name": "Electronic Devices", "code": "18EC33", "hoursPerWeek": 3 },
+        { "name": "Digital Electronics", "code": "18EC35", "hoursPerWeek": 4 },
+        { "name": "Signals & Systems", "code": "18EC34", "hoursPerWeek": 3 }
+      ],
+      "5": [
+        { "name": "Analog Communication", "code": "18EC51", "hoursPerWeek": 3 },
+        { "name": "Signals & Systems", "code": "18EC52", "hoursPerWeek": 4 },
+        { "name": "Information Theory & Coding", "code": "18EC53", "hoursPerWeek": 3 },
+        { "name": "Microcontrollers", "code": "18EC54", "hoursPerWeek": 3 },
+        { "name": "Electromagnetics", "code": "18EC55", "hoursPerWeek": 4 }
+      ],
+      "7": [
+        { "name": "Digital Signal Processing", "code": "18EC71", "hoursPerWeek": 4 },
+        { "name": "Wireless Communication", "code": "18EC72", "hoursPerWeek": 3 },
+        { "name": "Optical Fiber Communication", "code": "18EC73", "hoursPerWeek": 3 },
+        { "name": "Embedded Systems", "code": "18EC74", "hoursPerWeek": 4 }
+      ]
+    },
+    "EEE": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Network Analysis", "code": "18EE32", "hoursPerWeek": 4 },
+        { "name": "Electronic Instrumentation", "code": "18EE33", "hoursPerWeek": 3 },
+        { "name": "Digital Electronics", "code": "18EE34", "hoursPerWeek": 3 },
+        { "name": "Electrical Measurements", "code": "18EE35", "hoursPerWeek": 3 }
+      ],
+      "5": [
+        { "name": "Power Systems I", "code": "18EE51", "hoursPerWeek": 4 },
+        { "name": "Electrical Machines II", "code": "18EE52", "hoursPerWeek": 4 },
+        { "name": "Control Systems", "code": "18EE53", "hoursPerWeek": 3 },
+        { "name": "Microcontrollers", "code": "18EE54", "hoursPerWeek": 3 },
+        { "name": "Signals & Systems", "code": "18EE55", "hoursPerWeek": 3 }
+      ],
+      "7": [
+        { "name": "Power System Protection", "code": "18EE71", "hoursPerWeek": 4 },
+        { "name": "FACTS & HVDC", "code": "18EE72", "hoursPerWeek": 3 },
+        { "name": "Renewable Energy Sources", "code": "18EE73", "hoursPerWeek": 3 },
+        { "name": "Power Electronics Applications", "code": "18EE74", "hoursPerWeek": 4 }
+      ]
+    },
+    "ME": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Material Science", "code": "18ME32", "hoursPerWeek": 3 },
+        { "name": "Mechanics of Materials", "code": "18ME33", "hoursPerWeek": 4 },
+        { "name": "Manufacturing Science I", "code": "18ME34", "hoursPerWeek": 3 },
+        { "name": "Fluid Mechanics", "code": "18ME35", "hoursPerWeek": 3 }
+      ],
+      "5": [
+        { "name": "Design of Machine Elements I", "code": "18ME51", "hoursPerWeek": 4 },
+        { "name": "Thermodynamics", "code": "18ME52", "hoursPerWeek": 4 },
+        { "name": "Manufacturing Science II", "code": "18ME53", "hoursPerWeek": 3 },
+        { "name": "Dynamics of Machinery", "code": "18ME54", "hoursPerWeek": 4 },
+        { "name": "Metrology & Quality Control", "code": "18ME55", "hoursPerWeek": 3 }
+      ],
+      "7": [
+        { "name": "Robotics", "code": "18ME71", "hoursPerWeek": 3 },
+        { "name": "Finite Element Method", "code": "18ME72", "hoursPerWeek": 4 },
+        { "name": "Mechanical Vibrations", "code": "18ME73", "hoursPerWeek": 3 },
+        { "name": "Power Plant Engineering", "code": "18ME74", "hoursPerWeek": 3 }
+      ]
+    },
+    "CIVIL": {
+      "1": [
+        { "name": "Engineering Mathematics I", "code": "18MAT11", "hoursPerWeek": 4 },
+        { "name": "Engineering Physics", "code": "18PHY12", "hoursPerWeek": 4 },
+        { "name": "Basic Electrical Engineering", "code": "18ELE13", "hoursPerWeek": 3 },
+        { "name": "Elements of Civil Engineering & Mechanics", "code": "18CIV14", "hoursPerWeek": 3 },
+        { "name": "Computer Programming in C", "code": "18CPP15", "hoursPerWeek": 3 }
+      ],
+      "3": [
+        { "name": "Engineering Mathematics III", "code": "18MAT31", "hoursPerWeek": 4 },
+        { "name": "Strength of Materials", "code": "18CV32", "hoursPerWeek": 4 },
+        { "name": "Fluid Mechanics", "code": "18CV33", "hoursPerWeek": 3 },
+        { "name": "Surveying I", "code": "18CV34", "hoursPerWeek": 3 },
+        { "name": "Building Construction Materials", "code": "18CV35", "hoursPerWeek": 3 }
+      ],
+      "5": [
+        { "name": "Structural Analysis I", "code": "18CV51", "hoursPerWeek": 4 },
+        { "name": "Geotechnical Engineering I", "code": "18CV52", "hoursPerWeek": 4 },
+        { "name": "Design of RC Structures", "code": "18CV53", "hoursPerWeek": 4 },
+        { "name": "Hydraulics & Hydraulic Machinery", "code": "18CV54", "hoursPerWeek": 3 },
+        { "name": "Environmental Engineering I", "code": "18CV55", "hoursPerWeek": 3 }
+      ],
+      "7": [
+        { "name": "Prestressed Concrete Structures", "code": "18CV71", "hoursPerWeek": 4 },
+        { "name": "Transportation Engineering II", "code": "18CV72", "hoursPerWeek": 3 },
+        { "name": "Environmental Engineering II", "code": "18CV73", "hoursPerWeek": 3 },
+        { "name": "Estimation & Quantity Surveying", "code": "18CV74", "hoursPerWeek": 3 }
+      ]
+    }
+  },
+  "even": {
+    "CSE": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "C Programming for Problem Solving", "code": "18CPS25", "hoursPerWeek": 3 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Analysis & Design of Algorithms", "code": "18CS42", "hoursPerWeek": 4 },
+        { "name": "Microprocessors", "code": "18CS44", "hoursPerWeek": 3 },
+        { "name": "Object Oriented Programming with Java", "code": "18CS45", "hoursPerWeek": 4 },
+        { "name": "Computer Graphics & Visualization", "code": "18CS46", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "System Software & Compiler Design", "code": "18CS61", "hoursPerWeek": 3 },
+        { "name": "Computer Graphics & Visualization", "code": "18CS62", "hoursPerWeek": 3 },
+        { "name": "Compiler Design", "code": "18CS63", "hoursPerWeek": 4 },
+        { "name": "Information & Network Security", "code": "18CS64", "hoursPerWeek": 3 },
+        { "name": "Artificial Intelligence & ML", "code": "18CS65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "Deep Learning", "code": "18CS81", "hoursPerWeek": 4 },
+        { "name": "Cloud Computing & Big Data", "code": "18CS82", "hoursPerWeek": 3 },
+        { "name": "Natural Language Processing", "code": "18CS83", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18CSP84", "hoursPerWeek": 6 }
+      ]
+    },
+    "ISE": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "C Programming for Problem Solving", "code": "18CPS25", "hoursPerWeek": 3 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Design & Analysis of Algorithms", "code": "18IS42", "hoursPerWeek": 4 },
+        { "name": "Operating Systems", "code": "18IS43", "hoursPerWeek": 4 },
+        { "name": "Software Testing", "code": "18IS44", "hoursPerWeek": 3 },
+        { "name": "Advanced Java Programming", "code": "18IS45", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "System Administration", "code": "18IS61", "hoursPerWeek": 4 },
+        { "name": "Information Security", "code": "18IS62", "hoursPerWeek": 3 },
+        { "name": "Cloud Computing", "code": "18IS63", "hoursPerWeek": 3 },
+        { "name": "Advanced Databases", "code": "18IS64", "hoursPerWeek": 3 },
+        { "name": "Mobile Application Development", "code": "18IS65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "Blockchain Technology", "code": "18IS81", "hoursPerWeek": 3 },
+        { "name": "DevOps & Containerization", "code": "18IS82", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18ISP83", "hoursPerWeek": 6 }
+      ]
+    },
+    "ECE": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "C Programming for Problem Solving", "code": "18CPS25", "hoursPerWeek": 3 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Field Theory", "code": "18EC42", "hoursPerWeek": 4 },
+        { "name": "Control Systems", "code": "18EC44", "hoursPerWeek": 3 },
+        { "name": "Linear ICs & Applications", "code": "18EC43", "hoursPerWeek": 3 },
+        { "name": "CMOS VLSI Design", "code": "18EC45", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "Digital Communication", "code": "18EC61", "hoursPerWeek": 4 },
+        { "name": "Embedded Systems", "code": "18EC62", "hoursPerWeek": 3 },
+        { "name": "VLSI Design", "code": "18EC63", "hoursPerWeek": 3 },
+        { "name": "RF & Microwave Engineering", "code": "18EC64", "hoursPerWeek": 3 },
+        { "name": "Antenna & Wave Propagation", "code": "18EC65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "5G & Advanced Wireless", "code": "18EC81", "hoursPerWeek": 3 },
+        { "name": "MEMS & Nanotechnology", "code": "18EC82", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18ECP83", "hoursPerWeek": 6 }
+      ]
+    },
+    "EEE": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "C Programming for Problem Solving", "code": "18CPS25", "hoursPerWeek": 3 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Electrical Machines I", "code": "18EE42", "hoursPerWeek": 4 },
+        { "name": "Electromagnetic Field Theory", "code": "18EE43", "hoursPerWeek": 3 },
+        { "name": "Power Electronics", "code": "18EE44", "hoursPerWeek": 4 },
+        { "name": "Analog Electronics", "code": "18EE45", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "Power Systems II", "code": "18EE61", "hoursPerWeek": 4 },
+        { "name": "Control Systems II", "code": "18EE62", "hoursPerWeek": 3 },
+        { "name": "Digital Signal Processing", "code": "18EE63", "hoursPerWeek": 3 },
+        { "name": "Electrical Drives", "code": "18EE64", "hoursPerWeek": 3 },
+        { "name": "Switchgear & Protection", "code": "18EE65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "Smart Grid & Energy Management", "code": "18EE81", "hoursPerWeek": 3 },
+        { "name": "Electrical Vehicle Technology", "code": "18EE82", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18EEP83", "hoursPerWeek": 6 }
+      ]
+    },
+    "ME": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "Engineering Drawing", "code": "18MEL25", "hoursPerWeek": 4 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Applied Thermodynamics", "code": "18ME42", "hoursPerWeek": 4 },
+        { "name": "Kinematics of Machinery", "code": "18ME43", "hoursPerWeek": 3 },
+        { "name": "Metal Cutting & Tool Design", "code": "18ME44", "hoursPerWeek": 3 },
+        { "name": "Casting, Joining & Forming", "code": "18ME45", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "Design of Machine Elements II", "code": "18ME61", "hoursPerWeek": 4 },
+        { "name": "Turbo Machines", "code": "18ME62", "hoursPerWeek": 3 },
+        { "name": "Heat & Mass Transfer", "code": "18ME63", "hoursPerWeek": 4 },
+        { "name": "Industrial Management", "code": "18ME64", "hoursPerWeek": 3 },
+        { "name": "Computer Aided Design", "code": "18ME65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "Additive Manufacturing", "code": "18ME81", "hoursPerWeek": 3 },
+        { "name": "Mechatronics", "code": "18ME82", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18MEP83", "hoursPerWeek": 6 }
+      ]
+    },
+    "CIVIL": {
+      "2": [
+        { "name": "Engineering Mathematics II", "code": "18MAT21", "hoursPerWeek": 4 },
+        { "name": "Engineering Chemistry", "code": "18CHE22", "hoursPerWeek": 4 },
+        { "name": "Elements of Mechanical Engineering", "code": "18EME23", "hoursPerWeek": 3 },
+        { "name": "Basic Electronics", "code": "18ELN24", "hoursPerWeek": 3 },
+        { "name": "Engineering Drawing", "code": "18CVL25", "hoursPerWeek": 4 }
+      ],
+      "4": [
+        { "name": "Engineering Mathematics IV", "code": "18MAT41", "hoursPerWeek": 4 },
+        { "name": "Concrete Technology", "code": "18CV42", "hoursPerWeek": 3 },
+        { "name": "Structural Analysis II", "code": "18CV43", "hoursPerWeek": 4 },
+        { "name": "Water Supply Engineering", "code": "18CV44", "hoursPerWeek": 3 },
+        { "name": "Geotechnical Engineering II", "code": "18CV45", "hoursPerWeek": 3 }
+      ],
+      "6": [
+        { "name": "Foundation Engineering", "code": "18CV61", "hoursPerWeek": 4 },
+        { "name": "Design of Steel Structures", "code": "18CV62", "hoursPerWeek": 4 },
+        { "name": "Transportation Engineering I", "code": "18CV63", "hoursPerWeek": 3 },
+        { "name": "Irrigation Engineering", "code": "18CV64", "hoursPerWeek": 3 },
+        { "name": "Remote Sensing & GIS", "code": "18CV65", "hoursPerWeek": 3 }
+      ],
+      "8": [
+        { "name": "Earthquake Resistant Design", "code": "18CV81", "hoursPerWeek": 3 },
+        { "name": "Construction Project Management", "code": "18CV82", "hoursPerWeek": 3 },
+        { "name": "Project Work", "code": "18CVP83", "hoursPerWeek": 6 }
+      ]
+    }
+  }
+}

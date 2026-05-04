@@ -1,6 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import { Users, CheckCircle, Clock, Calendar, Plus, ArrowUpRight, MessageSquare, FileText, Zap, UserCheck, Book, LogOut } from 'lucide-react';
+import { 
+    Users, 
+    CheckCircle, 
+    Clock, 
+    Calendar, 
+    Plus, 
+    ArrowUpRight, 
+    MessageSquare, 
+    FileText, 
+    Zap, 
+    UserCheck, 
+    Book, 
+    LogOut 
+} from 'lucide-react';
+import { ref, onValue, set, push, serverTimestamp, remove, update } from 'firebase/database';
+import { database } from '../firebase';
 import './Admin.css';
 
 import AttendanceManager from '../components/faculty/AttendanceManager';
@@ -71,8 +86,44 @@ function TabButton({ active, onClick, icon, label }) {
 }
 
 function OverviewTab() {
+    const { user } = useAuthContext();
     const [attendanceStatus, setAttendanceStatus] = useState('Standby');
     const [isScanning, setIsScanning] = useState(false);
+    const [sessionId, setSessionId] = useState(null);
+    const [detectedCount, setDetectedCount] = useState(0);
+
+    useEffect(() => {
+        if (isScanning && !sessionId) {
+            const sessionsRef = ref(database, 'attendance_sessions');
+            const newSessionRef = push(sessionsRef);
+            const sid = newSessionRef.key;
+            setSessionId(sid);
+            
+            set(newSessionRef, {
+                facultyId: user?.uid,
+                facultyName: user?.displayName,
+                startTime: serverTimestamp(),
+                status: 'active',
+                course: 'Database Systems', // Mock for now
+                room: 'Lab-12'
+            });
+        } else if (!isScanning && sessionId) {
+            const sessionRef = ref(database, `attendance_sessions/${sessionId}`);
+            remove(sessionRef); // Close session
+            setSessionId(null);
+            setDetectedCount(0);
+        }
+    }, [isScanning]);
+
+    useEffect(() => {
+        let interval;
+        if (isScanning) {
+            interval = setInterval(() => {
+                setDetectedCount(prev => Math.min(prev + Math.floor(Math.random() * 3), 62));
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [isScanning]);
 
     const toggleAttendance = () => {
         setIsScanning(!isScanning);
@@ -121,6 +172,21 @@ function OverviewTab() {
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Start a session to begin automatic AI attendance tracking.</p>
                             </div>
                         )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Detected</span>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginTop: '0.25rem' }}>{detectedCount}</div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Verified</span>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#22c55e', marginTop: '0.25rem' }}>{Math.floor(detectedCount * 0.9)}</div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Anomalies</span>
+                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '0.25rem' }}>{Math.floor(detectedCount * 0.1)}</div>
+                        </div>
                     </div>
                 </div>
 

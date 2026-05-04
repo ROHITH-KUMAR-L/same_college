@@ -388,3 +388,70 @@
         height: 48px;
     }
 }
+
+/* ───────────── Timetable Premium Styles ───────────── */
+.timetable-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.timetable-card:hover {
+    background: rgba(255,255,255,0.05) !important;
+    transform: translateX(10px);
+}
+
+.active-slot {
+    box-shadow: 0 0 30px rgba(253, 224, 71, 0.1);
+    animation: glow-border 2s infinite alternate;
+}
+
+@keyframes glow-border {
+    from { border-color: rgba(253, 224, 71, 0.2); }
+    to { border-color: var(--accent-color); }
+}
+
+.live-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+}
+
+.live-indicator::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 16px;
+    height: 16px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: pulse-live 1.5s infinite;
+}
+
+@keyframes pulse-live {
+    0% { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.circle-btn-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+    transition: all 0.3s;
+}
+
+.timetable-card:hover .circle-btn-small {
+    background: var(--accent-color);
+    color: black;
+    transform: rotate(-45deg);
+}

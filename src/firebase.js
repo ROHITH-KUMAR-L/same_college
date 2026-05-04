@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics, initializeAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,6 +22,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const database = getDatabase(app);
+const storage = getStorage(app);
 
 // Only load analytics if the browser supports it (skips when ad blockers are active)
 let analytics = null;
@@ -34,4 +36,4 @@ isSupported().then(supported => {
   }
 }).catch(() => { });
 
-export { app, analytics, auth, googleProvider, database, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail };
+export { app, analytics, auth, googleProvider, database, storage, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail };

@@ -32,11 +32,25 @@ async def run_timetable_generator(faculty_data: Dict[str, Any]) -> Dict[str, Any
     
     prompt = f"""
     You are an expert academic scheduler for Campus IQ.
-    Generate a non-overlapping weekly timetable (Monday to Friday, 9 AM to 4 PM) based on the following faculty preferences and data:
-    {faculty_data}
+    Generate a non-overlapping weekly timetable (Monday to Friday, 9 AM to 4 PM) based on the following data:
     
-    It is ok to have gap periods.
-    Ensure that no professor is double-booked at the same time. Return the schedule strictly in the requested JSON format.
+    COLLEGE CONTEXT:
+    Branch: {faculty_data.get('branch')}
+    Semester: {faculty_data.get('semester')}
+    
+    SUBJECTS TO ALLOCATE:
+    {faculty_data.get('subjects')}
+    
+    AVAILABLE FACULTY:
+    {faculty_data.get('faculty_data')}
+    
+    CONSTRAINTS & INSTRUCTIONS:
+    1. Assign faculty to subjects based on their expertise. Use the 'specialisation', 'department', and 'designation' fields in the faculty data to match them with appropriate subjects.
+    2. Ensure that no professor is double-booked at the same time across the entire week.
+    3. The timetable should be from Monday to Friday, 9 AM to 4 PM.
+    4. Each subject should meet its required 'hoursPerWeek'.
+    5. It is ok to have gap periods (labeled as BREAK or empty slots).
+    6. Return the schedule strictly in the requested JSON format.
     """
     
     try:

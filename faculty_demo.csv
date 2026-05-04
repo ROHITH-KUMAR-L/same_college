@@ -1,0 +1,51 @@
+id,name,email,department,designation,specialisation
+FAC001,Dr. Rajesh Kumar,rajesh.kumar@college.edu,CSE,Professor,Algorithms and Data Structures
+FAC002,Ms. Priya Sharma,priya.sharma@college.edu,CSE,Assistant Professor,Machine Learning and AI
+FAC003,Mr. Amit Singh,amit.singh@college.edu,ECE,Lecturer,Digital Signal Processing
+FAC004,Dr. Sunita Rao,sunita.rao@college.edu,ME,Associate Professor,Thermodynamics
+FAC005,Mr. Vikram Joshi,vikram.joshi@college.edu,CSE,Assistant Professor,Database Management Systems
+FAC006,Dr. Ananya Das,ananya.das@college.edu,ISE,Professor,Cyber Security and Networking
+FAC007,Mr. Rahul Mehta,rahul.mehta@college.edu,CIVIL,Lecturer,Structural Engineering
+FAC008,Dr. Sneha Patil,sneha.patil@college.edu,EEE,Associate Professor,Power Systems
+FAC009,Mr. Karthik S,karthik.s@college.edu,CSE,Assistant Professor,Web Development
+FAC010,Ms. Meera Nair,meera.nair@college.edu,ISE,Assistant Professor,Cloud Computing
+FAC011,Dr. S. K. Gupta,sk.gupta@college.edu,Basic Sciences,Professor,Engineering Mathematics
+FAC012,Dr. Aruna Reddy,aruna.reddy@college.edu,Basic Sciences,Associate Professor,Engineering Physics
+FAC013,Dr. P. Venkat,p.venkat@college.edu,Basic Sciences,Assistant Professor,Engineering Chemistry
+FAC014,Mr. Santosh Kumar,santosh.k@college.edu,CSE,Lecturer,Computer Organization and Architecture
+FAC015,Ms. Deepa Rani,deepa.rani@college.edu,CSE,Assistant Professor,Software Engineering
+FAC016,Dr. Manoj Tiwari,manoj.tiwari@college.edu,ECE,Professor,Analog and Digital Communication
+FAC017,Mr. Suresh Babu,suresh.babu@college.edu,ECE,Assistant Professor,VLSI Design and CMOS
+FAC018,Ms. Kavita Jain,kavita.jain@college.edu,ECE,Lecturer,Microcontrollers and Embedded Systems
+FAC019,Mr. Praveen Kumar,praveen.k@college.edu,EEE,Assistant Professor,Electrical Machines
+FAC020,Dr. Lakshmi Devi,lakshmi.d@college.edu,EEE,Professor,Control Systems
+FAC021,Mr. Anand Kulkarni,anand.k@college.edu,ME,Assistant Professor,Material Science and Metallurgy
+FAC022,Ms. Vidya Sagar,vidya.s@college.edu,ME,Lecturer,Manufacturing Science
+FAC023,Dr. H. N. Murthy,hn.murthy@college.edu,ME,Professor,Dynamics of Machinery
+FAC024,Mr. G. S. Patil,gs.patil@college.edu,CIVIL,Assistant Professor,Geotechnical Engineering
+FAC025,Ms. Shalini Hegde,shalini.h@college.edu,CIVIL,Lecturer,Surveying and Levelling
+FAC026,Dr. B. R. Ambedkar,br.a@college.edu,CIVIL,Professor,Environmental Engineering
+FAC027,Mr. Vinay Nayak,vinay.n@college.edu,ISE,Assistant Professor,Data Warehousing and Mining
+FAC028,Ms. Shweta Singh,shweta.s@college.edu,ISE,Lecturer,Object Oriented Concepts with Java
+FAC029,Mr. Mahesh G,mahesh.g@college.edu,CSE,Assistant Professor,Automata Theory and Computability
+FAC030,Dr. Geeta Pillai,geeta.p@college.edu,CSE,Professor,Artificial Intelligence
+FAC031,Mr. Somnath Chatterjee,somnath.c@college.edu,Basic Sciences,Assistant Professor,English and Humanities
+FAC032,Dr. K. S. Rao,ks.rao@college.edu,Basic Sciences,Associate Professor,Mathematics and Calculus
+FAC033,Mr. Kiran More,kiran.m@college.edu,Basic Sciences,Lecturer,Physics and Quantum Mechanics
+FAC034,Ms. Pooja Hegde,pooja.h@college.edu,CSE,Assistant Professor,Operating Systems
+FAC035,Mr. Sameer Khan,sameer.k@college.edu,CSE,Lecturer,C Programming and Problem Solving
+FAC036,Dr. Joseph Anthony,joseph.a@college.edu,ECE,Professor,Signals and Systems
+FAC037,Ms. Neha Sharma,neha.s@college.edu,ECE,Assistant Professor,Electronic Devices and Circuits
+FAC038,Mr. Arun V,arun.v@college.edu,EEE,Lecturer,Power Electronics
+FAC039,Dr. S. R. Patil,sr.patil@college.edu,EEE,Professor,Renewable Energy Sources
+FAC040,Mr. Vikas R,vikas.r@college.edu,ME,Assistant Professor,Finite Element Method
+FAC041,Ms. Rekha M,rekha.m@college.edu,ME,Lecturer,CAD and CAM
+FAC042,Dr. M. S. Swaminathan,ms.s@college.edu,CIVIL,Professor,Irrigation and Water Resources
+FAC043,Mr. Ashok K,ashok.k@college.edu,CIVIL,Assistant Professor,Transportation Engineering
+FAC044,Ms. Swathi R,swathi.r@college.edu,ISE,Lecturer,Mobile Application Development
+FAC045,Mr. Chethan B,chethan.b@college.edu,ISE,Assistant Professor,Blockchain Technology
+FAC046,Dr. N. R. Narayana,nr.n@college.edu,CSE,Professor,Deep Learning
+FAC047,Mr. Sudeep K,sudeep.k@college.edu,CSE,Lecturer,Computer Graphics
+FAC048,Ms. Arathi G,arathi.g@college.edu,ECE,Assistant Professor,Field Theory
+FAC049,Mr. Manjunath R,manjunath.r@college.edu,EEE,Assistant Professor,Switchgear and Protection
+FAC050,Dr. C. N. R. Rao,cnr.r@college.edu,Basic Sciences,Professor,Advanced Chemistry

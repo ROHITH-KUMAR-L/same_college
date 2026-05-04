@@ -61,10 +61,7 @@ export default function Admin() {
     const [syllabusesList, setSyllabusesList] = useState([]);
     const [newSyllabusTitle, setNewSyllabusTitle] = useState('');
 
-    // Faculty Upload States
-    const [facultyCsvFile, setFacultyCsvFile] = useState(null);
-    const [facultyUploadStatus, setFacultyUploadStatus] = useState('idle'); // 'idle' | 'uploading' | 'success' | 'error'
-    const [facultyUploadMsg, setFacultyUploadMsg] = useState('');
+    // Faculty Data (kept for timetable generator)
     const [facultyList, setFacultyList] = useState([]);
 
     // Timetable Generator States
@@ -719,47 +716,7 @@ export default function Admin() {
         }
     };
 
-    const handleFacultyUpload = async (e) => {
-        e.preventDefault();
-        if (!facultyCsvFile) return;
-        setFacultyUploadStatus('uploading');
-        
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            try {
-                const text = event.target.result;
-                const rows = text.split('\n').filter(row => row.trim() !== '');
-                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
-                
-                const facultyData = {};
-                for (let i = 1; i < rows.length; i++) {
-                    const values = rows[i].split(',').map(v => v.trim());
-                    if (values.length === headers.length) {
-                        const obj = {};
-                        headers.forEach((h, index) => {
-                            obj[h] = values[index];
-                        });
-                        // Assume email or id as primary key
-                        const key = obj.id || obj.email?.replace(/[.#$\[\]]/g, '_') || `fac_${Date.now()}_${i}`;
-                        facultyData[key] = obj;
-                    }
-                }
-                
-                // Save to Firebase
-                await set(ref(database, 'faculty'), facultyData);
-                setFacultyUploadStatus('success');
-                setFacultyUploadMsg(`Successfully uploaded ${Object.keys(facultyData).length} faculty records.`);
-                setFacultyCsvFile(null);
-                
-                logAdminAction('Uploaded Faculty', 'faculty-upload', `${Object.keys(facultyData).length} records`);
-            } catch (err) {
-                console.error(err);
-                setFacultyUploadStatus('error');
-                setFacultyUploadMsg('Error processing CSV. Check format.');
-            }
-        };
-        reader.readAsText(facultyCsvFile);
-    };
+
 
     const handleGenerateTimetable = async (e) => {
         e.preventDefault();
@@ -866,10 +823,7 @@ export default function Admin() {
                         <button className={`sidebar-btn ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
                             <History size={18} /> System Logs
                         </button>
-                        <div className="menu-label" style={{ marginTop: '1rem' }}>AI Tools</div>
-                        <button className={`sidebar-btn ${activeTab === 'faculty-upload' ? 'active' : ''}`} onClick={() => setActiveTab('faculty-upload')}>
-                            <Upload size={18} /> Faculty Upload
-                        </button>
+
                         <button className={`sidebar-btn ${activeTab === 'timetable-generator' ? 'active' : ''}`} onClick={() => setActiveTab('timetable-generator')}>
                             <CalendarDays size={18} /> Timetable AI
                         </button>
@@ -892,8 +846,7 @@ export default function Admin() {
                                 <span>Admin</span> / {
                                     activeTab === 'dashboard' ? 'Overview' :
                                         activeTab === 'notes' ? 'Resources' :
-                                            activeTab === 'faculty-upload' ? 'Faculty Upload' :
-                                                activeTab === 'timetable-generator' ? 'Timetable AI' :
+                                            activeTab === 'timetable-generator' ? 'Timetable AI' :
                                                     activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                                 }
                             </div>
@@ -1265,61 +1218,6 @@ export default function Admin() {
                                                 <p>No activity logs found yet.</p>
                                             </div>
                                         )}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : activeTab === 'faculty-upload' ? (
-                            <div className="admin-logs-container animate-fade">
-                                <div className="admin-card card logs-card">
-                                    <div className="logs-header">
-                                        <div className="logs-header-left">
-                                            <Upload size={24} className="accent-text" />
-                                            <div>
-                                                <h3>Faculty Data Upload</h3>
-                                                <p>Upload CSV file to populate faculty database</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="admin-modal-body" style={{ padding: '2rem' }}>
-                                        <form onSubmit={handleFacultyUpload} className="modal-form">
-                                            <div className="modal-field">
-                                                <label>Select CSV File</label>
-                                                <input 
-                                                    type="file" 
-                                                    accept=".csv"
-                                                    onChange={e => setFacultyCsvFile(e.target.files[0])}
-                                                    style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                />
-                                                <small style={{ color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>Expected columns: id, name, email, department, designation</small>
-                                            </div>
-                                            
-                                            <div className="admin-modal-footer" style={{ justifyContent: 'flex-start', padding: 0, marginTop: '1.5rem' }}>
-                                                <button type="submit" className="modal-submit-btn primary" disabled={!facultyCsvFile || facultyUploadStatus === 'uploading'}>
-                                                    {facultyUploadStatus === 'uploading' ? 'Uploading...' : 'Upload Faculty Data'}
-                                                </button>
-                                            </div>
-                                            
-                                            {facultyUploadStatus === 'success' && <div style={{ color: '#10b981', marginTop: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>{facultyUploadMsg}</div>}
-                                            {facultyUploadStatus === 'error' && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>{facultyUploadMsg}</div>}
-                                        </form>
-                                        
-                                        <div style={{ marginTop: '3rem' }}>
-                                            <h4>Current Faculty Database ({facultyList.length} records)</h4>
-                                            <div className="manage-list" style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
-                                                {facultyList.length > 0 ? (
-                                                    facultyList.map(fac => (
-                                                        <div key={fac.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                            <div>
-                                                                <div style={{ fontWeight: '600' }}>{fac.name}</div>
-                                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{fac.email} | {fac.department}</div>
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <div style={{ color: 'var(--text-muted)' }}>No faculty data available.</div>
-                                                )}
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>

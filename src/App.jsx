@@ -19,6 +19,7 @@ import MarkAttendance from './pages/MarkAttendance';
 import DebugCreateFaculty from './pages/DebugCreateFaculty';
 import Enroll from './pages/Enroll';
 import ProtectedRoute from './components/ProtectedRoute';
+import VoiceAssistant from './components/VoiceAssistant';
 import './App.css';
 
 function App() {
@@ -48,7 +49,7 @@ function App() {
           </main>
           {/* Global Workspace Dock — visible on every page */}
           <WorkspaceDock />
-
+          <VoiceAssistant />
         </div>
       </AuthProvider>
     </Router>

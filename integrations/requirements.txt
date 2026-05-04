@@ -8,3 +8,4 @@ langchain-pinecone
 pinecone-client
 python-multipart
 python-dotenv
+httpx

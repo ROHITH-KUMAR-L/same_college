@@ -1,12 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import { Users, CheckCircle, Clock, Calendar, Plus, ArrowUpRight, MessageSquare, FileText, Zap } from 'lucide-react';
-import { ref, onValue } from 'firebase/database';
-import { database } from '../firebase';
-import './Admin.css'; // Reusing admin styles for glassmorphism
+import { Users, CheckCircle, Clock, Calendar, Plus, ArrowUpRight, MessageSquare, FileText, Zap, UserCheck, Book, LogOut } from 'lucide-react';
+import './Admin.css';
+
+import AttendanceManager from '../components/faculty/AttendanceManager';
+import ScheduleManager from '../components/faculty/ScheduleManager';
+import LeaveManager from '../components/faculty/LeaveManager';
+import ResourceManager from '../components/faculty/ResourceManager';
 
 export default function FacultyDashboard() {
     const { user } = useAuthContext();
+    const [activeTab, setActiveTab] = useState('overview');
+
+    return (
+        <div className="admin-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', marginBottom: '0.5rem' }}>Faculty Command Center</h1>
+                    <p style={{ color: 'var(--text-muted)' }}>Welcome back, Prof. {user?.displayName?.split(' ')[0] || 'User'}. Manage your classes and attendance.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Plus size={18} /> New Assignment
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '2rem', overflowX: 'auto' }}>
+                <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<Users size={18} />} label="Overview" />
+                <TabButton active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} icon={<UserCheck size={18} />} label="Attendance & Reports" />
+                <TabButton active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} icon={<Calendar size={18} />} label="My Schedule" />
+                <TabButton active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')} icon={<Clock size={18} />} label="Leave Management" />
+                <TabButton active={activeTab === 'resources'} onClick={() => setActiveTab('resources')} icon={<Book size={18} />} label="Course Materials" />
+            </div>
+
+            {/* Content Area */}
+            {activeTab === 'overview' && <OverviewTab />}
+            {activeTab === 'attendance' && <AttendanceManager />}
+            {activeTab === 'schedule' && <ScheduleManager />}
+            {activeTab === 'leaves' && <LeaveManager />}
+            {activeTab === 'resources' && <ResourceManager />}
+        </div>
+    );
+}
+
+function TabButton({ active, onClick, icon, label }) {
+    return (
+        <button 
+            onClick={onClick}
+            style={{ 
+                background: active ? 'rgba(253, 224, 71, 0.1)' : 'transparent', 
+                color: active ? 'var(--accent-color)' : 'white', 
+                border: active ? '1px solid var(--accent-color)' : '1px solid transparent', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s'
+            }}
+        >
+            {icon} {label}
+        </button>
+    );
+}
+
+function OverviewTab() {
     const [attendanceStatus, setAttendanceStatus] = useState('Standby');
     const [isScanning, setIsScanning] = useState(false);
 
@@ -16,53 +80,15 @@ export default function FacultyDashboard() {
     };
 
     return (
-        <div className="admin-container" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', marginBottom: '0.5rem' }}>Faculty Control Center</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Welcome back, Prof. {user?.displayName?.split(' ')[0]}. Manage your classes and attendance.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Calendar size={18} /> My Schedule
-                    </button>
-                    <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Plus size={18} /> New Assignment
-                    </button>
-                </div>
-            </div>
-
-            {/* Stats Grid */}
+        <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                <FacultyStatCard 
-                    icon={<Users size={24} color="var(--accent-color)" />}
-                    label="Active Courses"
-                    value="4"
-                    sub="3 Lectures, 1 Lab"
-                />
-                <FacultyStatCard 
-                    icon={<CheckCircle size={24} color="#22c55e" />}
-                    label="Total Students"
-                    value="182"
-                    sub="+12 from last semester"
-                />
-                <FacultyStatCard 
-                    icon={<Clock size={24} color="#3b82f6" />}
-                    label="Grading Pending"
-                    value="45"
-                    sub="Due in 4 days"
-                />
-                <FacultyStatCard 
-                    icon={<MessageSquare size={24} color="#a855f7" />}
-                    label="Student Queries"
-                    value="8"
-                    sub="3 Urgent"
-                />
+                <FacultyStatCard icon={<Users size={24} color="var(--accent-color)" />} label="Active Courses" value="4" sub="3 Lectures, 1 Lab" />
+                <FacultyStatCard icon={<CheckCircle size={24} color="#22c55e" />} label="Total Students" value="182" sub="+12 from last semester" />
+                <FacultyStatCard icon={<Clock size={24} color="#3b82f6" />} label="Grading Pending" value="45" sub="Due in 4 days" />
+                <FacultyStatCard icon={<MessageSquare size={24} color="#a855f7" />} label="Student Queries" value="8" sub="3 Urgent" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                {/* Automatic Attendance Section */}
                 <div className="admin-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -73,11 +99,7 @@ export default function FacultyDashboard() {
                                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isScanning ? '#22c55e' : '#555', animation: isScanning ? 'pulse 1.5s infinite' : 'none' }}></div>
                                 {attendanceStatus}
                             </span>
-                            <button 
-                                className={isScanning ? 'btn-outline' : 'btn-primary'} 
-                                onClick={toggleAttendance}
-                                style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
-                            >
+                            <button className={isScanning ? 'btn-outline' : 'btn-primary'} onClick={toggleAttendance} style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}>
                                 {isScanning ? 'Stop Scanning' : 'Start Session'}
                             </button>
                         </div>
@@ -100,24 +122,8 @@ export default function FacultyDashboard() {
                             </div>
                         )}
                     </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Detected</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginTop: '0.25rem' }}>{isScanning ? '42' : '0'}</div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Verified</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#22c55e', marginTop: '0.25rem' }}>{isScanning ? '38' : '0'}</div>
-                        </div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Anomalies</span>
-                            <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#ef4444', marginTop: '0.25rem' }}>{isScanning ? '4' : '0'}</div>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Upcoming Classes */}
                 <div className="admin-card" style={{ padding: '2rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginBottom: '1.5rem' }}>Today's Classes</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -127,7 +133,7 @@ export default function FacultyDashboard() {
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
 
@@ -136,32 +142,20 @@ function FacultyStatCard({ icon, label, value, sub }) {
         <div className="admin-card" style={{ padding: '1.5rem', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: '0', right: '0', width: '100px', height: '100px', background: 'radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    {icon}
-                </div>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>{icon}</div>
                 <div>
                     <div style={{ fontSize: '1.75rem', fontWeight: '900', color: 'white' }}>{value}</div>
                     <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>{label}</div>
                 </div>
             </div>
-            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
-                {sub}
-            </div>
+            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>{sub}</div>
         </div>
     );
 }
 
 function ClassItem({ time, title, room, students, status, active = false }) {
     return (
-        <div style={{ 
-            background: active ? 'rgba(253, 224, 71, 0.05)' : 'rgba(255,255,255,0.02)', 
-            padding: '1.25rem', 
-            borderRadius: '16px', 
-            border: active ? '1px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem'
-        }}>
+        <div style={{ background: active ? 'rgba(253, 224, 71, 0.05)' : 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: active ? '1px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ textAlign: 'center', minWidth: '80px', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
                 <div style={{ fontSize: '0.9rem', fontWeight: '800', color: 'white' }}>{time}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700' }}>{room}</div>
@@ -171,17 +165,7 @@ function ClassItem({ time, title, room, students, status, active = false }) {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{students} Students Enrolled</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-                <span style={{ 
-                    fontSize: '0.65rem', 
-                    fontWeight: '900', 
-                    padding: '0.25rem 0.6rem', 
-                    borderRadius: '6px', 
-                    background: status === 'Completed' ? '#22c55e' : status === 'In Progress' ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)',
-                    color: status === 'In Progress' || status === 'Completed' ? 'black' : 'white',
-                    textTransform: 'uppercase'
-                }}>
-                    {status}
-                </span>
+                <span style={{ fontSize: '0.65rem', fontWeight: '900', padding: '0.25rem 0.6rem', borderRadius: '6px', background: status === 'Completed' ? '#22c55e' : status === 'In Progress' ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)', color: status === 'In Progress' || status === 'Completed' ? 'black' : 'white', textTransform: 'uppercase' }}>{status}</span>
             </div>
         </div>
     );

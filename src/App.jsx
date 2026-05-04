@@ -13,6 +13,7 @@ import Admin from './pages/Admin';
 import Faculty from './pages/Faculty';
 import PrivacyPolicy from './pages/Legal';
 import Papers from './pages/Papers';
+import MarkAttendance from './pages/MarkAttendance';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -33,6 +34,7 @@ function App() {
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
               <Route path="/faculty" element={<ProtectedRoute><Faculty /></ProtectedRoute>} />
+              <Route path="/mark-attendance" element={<MarkAttendance />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
           </main>

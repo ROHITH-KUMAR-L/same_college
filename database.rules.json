@@ -9,24 +9,28 @@
     "users": {
       ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null",
-        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com' || auth.token.email === 'shivarajm.cs25@rvce.edu.in' || auth.token.email === 'rockybai8234@gmail.com')",
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
         "role": {
-           ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'shivarajm.cs25@rvce.edu.in' || auth.token.email === 'rockybai8234@gmail.com')"
+           ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || auth.token.email === 'rohithkumarl2006@gmail.com')"
         }
       }
     },
     "attendance_sessions": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || auth.token.email === 'eng.sarita@gmail.com' || auth.token.email === 'rohithkumarl2006@gmail.com')"
+    },
+    "attendance_records": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     },
     "admin_leaves": {
-      ".read": "auth != null",
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
       ".write": "auth != null"
     },
     "timetable": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
     },
     "favorites": {
       "$uid": {
@@ -37,21 +41,21 @@
     "resources": {
         "notes": {
           ".read": true,
-          ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')",
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
           ".indexOn": ["academicYear", "branch", "parentId"]
         },
         "papers": {
           ".read": true,
-          ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
         }
     },
     "syllabuses": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
     },
     "branches": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'FACULTY' || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
     },
     "admins": {
       ".read": true,

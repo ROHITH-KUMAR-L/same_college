@@ -8,7 +8,7 @@ import {
     Users, Zap, Database, RefreshCw, LayoutDashboard, LogOut,
     CheckCircle2, Eye, BarChart3, ShieldCheck, Menu, X, Home, History,
     Search, Filter, ChevronDown, Folder, MessageSquare, Quote, Star,
-    FilterX, ChevronLeft
+    FilterX, ChevronLeft, Upload, CalendarDays, Wand2, Download
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import IframeModal from '../components/IframeModal';
@@ -59,6 +59,20 @@ export default function Admin() {
     const [showSyllabusModal, setShowSyllabusModal] = useState(false);
     const [syllabusesList, setSyllabusesList] = useState([]);
     const [newSyllabusTitle, setNewSyllabusTitle] = useState('');
+
+    // Faculty Upload States
+    const [facultyCsvFile, setFacultyCsvFile] = useState(null);
+    const [facultyUploadStatus, setFacultyUploadStatus] = useState('idle'); // 'idle' | 'uploading' | 'success' | 'error'
+    const [facultyUploadMsg, setFacultyUploadMsg] = useState('');
+    const [facultyList, setFacultyList] = useState([]);
+
+    // Timetable Generator States
+    const [ttSemType, setTtSemType] = useState('odd'); // 'odd' | 'even'
+    const [ttBranch, setTtBranch] = useState('');
+    const [ttSemester, setTtSemester] = useState('');
+    const [ttGenerating, setTtGenerating] = useState(false);
+    const [generatedTimetable, setGeneratedTimetable] = useState(null);
+    const [subjectsData, setSubjectsData] = useState(null);
 
     // Drive Folder integration
     const [showDriveFolderModal, setShowDriveFolderModal] = useState(false);
@@ -135,6 +149,28 @@ export default function Admin() {
             console.error('Failed to log action:', err);
         }
     };
+
+    // Load subjects.json on mount
+    useEffect(() => {
+        fetch('/subjects.json')
+            .then(r => r.json())
+            .then(data => setSubjectsData(data))
+            .catch(() => setSubjectsData(null));
+    }, []);
+
+    // Fetch faculty list from Firebase on mount
+    useEffect(() => {
+        const facultyRef = ref(database, 'faculty');
+        const unsub = onValue(facultyRef, (snap) => {
+            const data = snap.val();
+            if (data) {
+                setFacultyList(Object.keys(data).map(k => ({ id: k, ...data[k] })));
+            } else {
+                setFacultyList([]);
+            }
+        });
+        return () => unsub();
+    }, []);
 
     useEffect(() => {
         let unsubscribeResources = () => { };
@@ -669,6 +705,92 @@ export default function Admin() {
         }
     };
 
+    const handleFacultyUpload = async (e) => {
+        e.preventDefault();
+        if (!facultyCsvFile) return;
+        setFacultyUploadStatus('uploading');
+        
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const text = event.target.result;
+                const rows = text.split('\n').filter(row => row.trim() !== '');
+                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+                
+                const facultyData = {};
+                for (let i = 1; i < rows.length; i++) {
+                    const values = rows[i].split(',').map(v => v.trim());
+                    if (values.length === headers.length) {
+                        const obj = {};
+                        headers.forEach((h, index) => {
+                            obj[h] = values[index];
+                        });
+                        // Assume email or id as primary key
+                        const key = obj.id || obj.email?.replace(/[.#$\[\]]/g, '_') || `fac_${Date.now()}_${i}`;
+                        facultyData[key] = obj;
+                    }
+                }
+                
+                // Save to Firebase
+                await set(ref(database, 'faculty'), facultyData);
+                setFacultyUploadStatus('success');
+                setFacultyUploadMsg(`Successfully uploaded ${Object.keys(facultyData).length} faculty records.`);
+                setFacultyCsvFile(null);
+                
+                logAdminAction('Uploaded Faculty', 'faculty-upload', `${Object.keys(facultyData).length} records`);
+            } catch (err) {
+                console.error(err);
+                setFacultyUploadStatus('error');
+                setFacultyUploadMsg('Error processing CSV. Check format.');
+            }
+        };
+        reader.readAsText(facultyCsvFile);
+    };
+
+    const handleGenerateTimetable = async (e) => {
+        e.preventDefault();
+        if (!ttBranch || !ttSemester || !ttSemType) {
+            alert("Please select branch, semester, and sem type.");
+            return;
+        }
+        setTtGenerating(true);
+        setGeneratedTimetable(null);
+        
+        try {
+            const branchSubjects = subjectsData?.[ttSemType]?.[ttBranch]?.[ttSemester];
+            if (!branchSubjects) {
+                throw new Error("No subjects found for this selection in subjects.json");
+            }
+            
+            const response = await fetch('http://localhost:8000/api/v1/timetable/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    branch: ttBranch,
+                    semester: ttSemester,
+                    sem_type: ttSemType,
+                    subjects: branchSubjects,
+                    faculty_data: facultyList
+                })
+            });
+            
+            if (!response.ok) throw new Error("API request failed");
+            const result = await response.json();
+            
+            if (result.success) {
+                setGeneratedTimetable(result.data.timetable);
+                logAdminAction('Generated Timetable', 'timetable-generator', `${ttBranch} Sem ${ttSemester}`);
+            } else {
+                throw new Error(result.error || "Generation failed");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to generate timetable: " + err.message);
+        } finally {
+            setTtGenerating(false);
+        }
+    };
+
     const handleMove = async (res, newParentId) => {
         try {
             await set(ref(database, `resources/${activeTab}/${res.id}/parentId`), newParentId);
@@ -730,6 +852,13 @@ export default function Admin() {
                         <button className={`sidebar-btn ${activeTab === 'logs' ? 'active' : ''}`} onClick={() => setActiveTab('logs')}>
                             <History size={18} /> System Logs
                         </button>
+                        <div className="menu-label" style={{ marginTop: '1rem' }}>AI Tools</div>
+                        <button className={`sidebar-btn ${activeTab === 'faculty-upload' ? 'active' : ''}`} onClick={() => setActiveTab('faculty-upload')}>
+                            <Upload size={18} /> Faculty Upload
+                        </button>
+                        <button className={`sidebar-btn ${activeTab === 'timetable-generator' ? 'active' : ''}`} onClick={() => setActiveTab('timetable-generator')}>
+                            <CalendarDays size={18} /> Timetable AI
+                        </button>
                     </div>
 
                     <div className="sidebar-bottom">
@@ -749,7 +878,9 @@ export default function Admin() {
                                 <span>Admin</span> / {
                                     activeTab === 'dashboard' ? 'Overview' :
                                         activeTab === 'notes' ? 'Resources' :
-                                            activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
+                                            activeTab === 'faculty-upload' ? 'Faculty Upload' :
+                                                activeTab === 'timetable-generator' ? 'Timetable AI' :
+                                                    activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
                                 }
                             </div>
                         </div>
@@ -1118,6 +1249,158 @@ export default function Admin() {
                                             <div className="empty-logs">
                                                 <History size={48} />
                                                 <p>No activity logs found yet.</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : activeTab === 'faculty-upload' ? (
+                            <div className="admin-logs-container animate-fade">
+                                <div className="admin-card card logs-card">
+                                    <div className="logs-header">
+                                        <div className="logs-header-left">
+                                            <Upload size={24} className="accent-text" />
+                                            <div>
+                                                <h3>Faculty Data Upload</h3>
+                                                <p>Upload CSV file to populate faculty database</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="admin-modal-body" style={{ padding: '2rem' }}>
+                                        <form onSubmit={handleFacultyUpload} className="modal-form">
+                                            <div className="modal-field">
+                                                <label>Select CSV File</label>
+                                                <input 
+                                                    type="file" 
+                                                    accept=".csv"
+                                                    onChange={e => setFacultyCsvFile(e.target.files[0])}
+                                                    style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                />
+                                                <small style={{ color: 'var(--text-muted)', marginTop: '0.5rem', display: 'block' }}>Expected columns: id, name, email, department, designation</small>
+                                            </div>
+                                            
+                                            <div className="admin-modal-footer" style={{ justifyContent: 'flex-start', padding: 0, marginTop: '1.5rem' }}>
+                                                <button type="submit" className="modal-submit-btn primary" disabled={!facultyCsvFile || facultyUploadStatus === 'uploading'}>
+                                                    {facultyUploadStatus === 'uploading' ? 'Uploading...' : 'Upload Faculty Data'}
+                                                </button>
+                                            </div>
+                                            
+                                            {facultyUploadStatus === 'success' && <div style={{ color: '#10b981', marginTop: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px' }}>{facultyUploadMsg}</div>}
+                                            {facultyUploadStatus === 'error' && <div style={{ color: '#ef4444', marginTop: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>{facultyUploadMsg}</div>}
+                                        </form>
+                                        
+                                        <div style={{ marginTop: '3rem' }}>
+                                            <h4>Current Faculty Database ({facultyList.length} records)</h4>
+                                            <div className="manage-list" style={{ marginTop: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
+                                                {facultyList.length > 0 ? (
+                                                    facultyList.map(fac => (
+                                                        <div key={fac.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div>
+                                                                <div style={{ fontWeight: '600' }}>{fac.name}</div>
+                                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{fac.email} | {fac.department}</div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div style={{ color: 'var(--text-muted)' }}>No faculty data available.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : activeTab === 'timetable-generator' ? (
+                            <div className="admin-logs-container animate-fade">
+                                <div className="admin-card card logs-card">
+                                    <div className="logs-header">
+                                        <div className="logs-header-left">
+                                            <Wand2 size={24} className="accent-text" />
+                                            <div>
+                                                <h3>AI Timetable Generator</h3>
+                                                <p>Generate optimized schedules using Gemini</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="admin-modal-body" style={{ padding: '2rem' }}>
+                                        <form onSubmit={handleGenerateTimetable} className="modal-form">
+                                            <div className="modal-form-row">
+                                                <div className="modal-field">
+                                                    <label>Semester Type</label>
+                                                    <select value={ttSemType} onChange={e => setTtSemType(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
+                                                        <option value="odd" style={{ color: 'black' }}>Odd Semester</option>
+                                                        <option value="even" style={{ color: 'black' }}>Even Semester</option>
+                                                    </select>
+                                                </div>
+                                                <div className="modal-field">
+                                                    <label>Branch</label>
+                                                    <select value={ttBranch} onChange={e => setTtBranch(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} required>
+                                                        <option value="" style={{ color: 'black' }}>Select Branch</option>
+                                                        {subjectsData && subjectsData[ttSemType] ? Object.keys(subjectsData[ttSemType]).map(b => (
+                                                            <option key={b} value={b} style={{ color: 'black' }}>{b}</option>
+                                                        )) : null}
+                                                    </select>
+                                                </div>
+                                                <div className="modal-field">
+                                                    <label>Semester</label>
+                                                    <select value={ttSemester} onChange={e => setTtSemester(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} required>
+                                                        <option value="" style={{ color: 'black' }}>Select Semester</option>
+                                                        {subjectsData && ttBranch && subjectsData[ttSemType]?.[ttBranch] ? Object.keys(subjectsData[ttSemType][ttBranch]).map(s => (
+                                                            <option key={s} value={s} style={{ color: 'black' }}>Sem {s}</option>
+                                                        )) : null}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="admin-modal-footer" style={{ justifyContent: 'flex-start', padding: 0, marginTop: '1.5rem' }}>
+                                                <button type="submit" className="modal-submit-btn primary" disabled={ttGenerating}>
+                                                    {ttGenerating ? 'Generating with AI...' : 'Generate Timetable'}
+                                                </button>
+                                            </div>
+                                        </form>
+                                        
+                                        {generatedTimetable && (
+                                            <div style={{ marginTop: '3rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                                    <h4>Generated Timetable</h4>
+                                                    <button className="btn-outline" onClick={() => {
+                                                        const blob = new Blob([JSON.stringify(generatedTimetable, null, 2)], {type: 'application/json'});
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement('a');
+                                                        a.href = url;
+                                                        a.download = `timetable_${ttBranch}_sem${ttSemester}.json`;
+                                                        a.click();
+                                                    }}>
+                                                        <Download size={16} /> Export JSON
+                                                    </button>
+                                                </div>
+                                                
+                                                <div style={{ overflowX: 'auto', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+                                                        <thead>
+                                                            <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
+                                                                <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Day</th>
+                                                                <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Periods</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {generatedTimetable.map((day, idx) => (
+                                                                <tr key={idx}>
+                                                                    <td style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', fontWeight: '600' }}>{day.day}</td>
+                                                                    <td style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                            {day.periods.map((p, pIdx) => (
+                                                                                <div key={pIdx} style={{ padding: '0.5rem 0.75rem', background: p.type === 'LAB' ? 'rgba(0,243,255,0.1)' : 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.85rem' }}>
+                                                                                    <div style={{ fontWeight: '600', color: p.type === 'LAB' ? '#00f3ff' : 'white' }}>{p.subject_code}</div>
+                                                                                    <div style={{ color: 'var(--text-muted)' }}>{p.start_time}-{p.end_time}</div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

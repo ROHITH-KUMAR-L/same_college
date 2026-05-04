@@ -26,7 +26,7 @@ export default function Navbar() {
                     <div className="nav-links nav-desktop-only">
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
                         <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes</Link>
-                        <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>Contest    </Link>
+                        <Link to="/papers" className={`nav-item ${isActive('/papers')}`}>Previous Year Question Paper</Link>
                         <Link to="/timetable" className={`nav-item ${isActive('/timetable')}`}>Time Table</Link>
                         {user?.role === 'ADMIN' && (
                             <Link to="/admin" className={`nav-item ${isActive('/admin')}`}>Admin</Link>
@@ -76,9 +76,9 @@ export default function Navbar() {
                     <FileText size={20} />
                     <span>Resources</span>
                 </Link>
-                <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
-                    <Zap size={20} />
-                    <span>DCET</span>
+                <Link to="/papers" className={`mobile-nav-item ${isActive('/papers')}`}>
+                    <FileText size={20} />
+                    <span>Papers</span>
                 </Link>
                 <Link to="/timetable" className={`mobile-nav-item ${isActive('/timetable')}`}>
                     <Clock size={20} />

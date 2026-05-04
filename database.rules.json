@@ -15,8 +15,8 @@
     "users": {
       ".read": "auth != null",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'shivarajmani2005@gmail.com' || auth.token.email === 'vivekvernekar02@gmail.com' || auth.token.email === 'contactus.techastra@gmail.com')",
-        ".write": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'shivarajm.cs25@rvce.edu.in' || auth.token.email === 'vivekvernekar02@gmail.com' || auth.token.email === 'contactus.techastra@gmail.com' || auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'shivarajm.cs25@rvce.edu.in' || auth.token.email === 'vivekvernekar02@gmail.com' || auth.token.email === 'contactus.techastra@gmail.com' || auth.token.email === 'rohithkumarl2006@gmail.com' || auth.token.email === 'eng.sarita@gmail.com')"
       }
     },
     "favorites": {
@@ -28,37 +28,27 @@
     "resources": {
       "notes": {
         ".read": true,
-        ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
-        ".indexOn": [
-          "academicYear",
-          "branch",
-          "parentId"
-        ]
+        ".write": "auth != null",
+        ".indexOn": ["academicYear", "branch", "parentId"]
       },
       "dcet": {
         ".read": true,
-        ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))",
-        ".indexOn": [
-          "academicYear",
-          "branch",
-          "parentId"
-        ]
+        ".write": "auth != null",
+        ".indexOn": ["academicYear", "branch", "parentId"]
       }
     },
     "syllabuses": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))"
+      ".write": "auth != null"
     },
     "branches": {
       ".read": true,
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com' || root.child('admins').hasChild(auth.token.email.replace('.', ',')))"
+      ".write": "auth != null"
     },
     "system_logs": {
-      ".read": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com')",
-      ".write": "auth != null && (auth.token.email == 'shivarajmani2005@gmail.com' || auth.token.email == 'vivekvernekar02@gmail.com' || auth.token.email == 'contactus.techastra@gmail.com')",
-      ".indexOn": [
-        "timestamp"
-      ]
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp"]
     },
     "admins": {
       ".read": true,
@@ -66,30 +56,6 @@
     },
     "testimonials": {
       ".read": true,
-      ".write": "auth != null"
-    },
-    "attendance_sessions": {
-      ".read": true,
-      ".write": "auth != null"
-    },
-    "attendance_records": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "faculty_schedules": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "substitute_requests": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "faculty_leaves": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "course_materials": {
-      ".read": "auth != null",
       ".write": "auth != null"
     }
   }

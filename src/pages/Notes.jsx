@@ -248,6 +248,7 @@ export default function Notes() {
                 note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (note.chapter && note.chapter.toLowerCase().includes(searchQuery.toLowerCase()));
             if (note.isFolder) return matchesFolder && matchesSearch;
+            if (note.type === 'Paper') return false; // Hide Question Papers from Notes
             const matchesBranch = !selBranch || note.branch === selBranch || note.branch === 'Common';
             const matchesSyllabus = !selSyllabus || note.syllabus === selSyllabus;
             const matchesSemester = !selSemester || note.semester === selSemester;

@@ -202,6 +202,7 @@ export default function Admin() {
                             email: userData.email || '',
                             photoURL: userData.photoURL || '',
                             name: userData.profile?.name || userData.displayName || '',
+                            role: userData.role || 'STUDENT',
                             ...(userData.profile || {})
                         };
                     });
@@ -581,6 +582,18 @@ export default function Admin() {
         }
     };
 
+    const handleRoleChange = async (uid, newRole) => {
+        try {
+            await set(ref(database, `users/${uid}/role`), newRole);
+            setSelectedUser(prev => ({ ...prev, role: newRole }));
+            logAdminAction('Changed User Role', 'users', `Set role to ${newRole} for user ${uid}`);
+            alert(`Role successfully updated to ${newRole}!`);
+        } catch (err) {
+            console.error("Failed to update role:", err);
+            alert("Failed to update user role. Check permissions.");
+        }
+    };
+
     const handleAddResource = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -833,8 +846,8 @@ export default function Admin() {
                                         <div className="chart-header">
                                             <BarChart3 size={18} /> Resource Categories
                                         </div>
-                                        <div className="chart-body" style={{ height: '250px' }}>
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <div className="chart-body" style={{ width: '100%', height: 250 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                                 <BarChart data={catData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                                     <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -854,8 +867,8 @@ export default function Admin() {
                                         <div className="chart-header">
                                             <Zap size={18} /> Top Branches Used
                                         </div>
-                                        <div className="chart-body" style={{ height: '250px' }}>
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <div className="chart-body" style={{ width: '100%', height: 250 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                                 <BarChart data={mockTechData} layout="vertical" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                                                     <XAxis type="number" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -878,8 +891,8 @@ export default function Admin() {
                                         <div className="chart-header" style={{ alignSelf: 'flex-start' }}>
                                             <Users size={18} /> Users Composition
                                         </div>
-                                        <div className="chart-body" style={{ display: 'flex', justifyContent: 'center', height: '250px' }}>
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <div className="chart-body" style={{ display: 'flex', justifyContent: 'center', width: '100%', height: 250 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                                 <PieChart>
                                                     <Pie
                                                         data={mockPieData}
@@ -905,8 +918,8 @@ export default function Admin() {
                                         <div className="chart-header" style={{ alignSelf: 'flex-start' }}>
                                             <ShieldCheck size={18} /> Resource Status Pipeline
                                         </div>
-                                        <div className="chart-body" style={{ display: 'flex', justifyContent: 'center', height: '250px' }}>
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                        <div className="chart-body" style={{ display: 'flex', justifyContent: 'center', width: '100%', height: 250 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                                                 <PieChart>
                                                     <Pie
                                                         data={[{ name: 'Approved', val: 80 }, { name: 'Pending', val: 20 }]}
@@ -1709,6 +1722,31 @@ export default function Admin() {
                                     <div className="detail-item">
                                         <label>Last Updated</label>
                                         <div className="value">{selectedUser.updatedAt ? new Date(selectedUser.updatedAt).toLocaleDateString() : 'Never'}</div>
+                                    </div>
+                                    <div className="detail-item" style={{ gridColumn: '1 / -1', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <label style={{ color: 'var(--accent-color)' }}>System Access Role</label>
+                                        <select 
+                                            className="profile-input" 
+                                            style={{ 
+                                                padding: '0.6rem 1rem', 
+                                                marginTop: '0.5rem', 
+                                                width: '100%', 
+                                                background: 'rgba(255,255,255,0.03)', 
+                                                color: 'white', 
+                                                border: '1px solid rgba(255,255,255,0.1)', 
+                                                borderRadius: '8px',
+                                                appearance: 'auto'
+                                            }}
+                                            value={selectedUser.role || 'STUDENT'}
+                                            onChange={(e) => handleRoleChange(selectedUser.uid, e.target.value)}
+                                        >
+                                            <option value="STUDENT" style={{color: 'black'}}>Student</option>
+                                            <option value="FACULTY" style={{color: 'black'}}>Faculty</option>
+                                            <option value="ADMIN" style={{color: 'black'}}>Super Admin</option>
+                                        </select>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                            Note: Changing a role updates their system access level immediately.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

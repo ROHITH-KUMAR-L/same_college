@@ -139,24 +139,23 @@ export default function Home() {
                         </h1>
                     </div>
                     <p className="hero-tagline">
-                        The ultimate study hub for Diploma students. Access premium notes, past question papers, and DCET Question papers from trusted academic resources—all centralized for your success.
+                        The ultimate study hub for engineering students.
                     </p>
 
+                        <button
+                            className="btn-explore"
+                            onClick={() => navigate('/notes')}
+                        >
+                            Explore All Resources <ArrowRight size={20} />
+                        </button>
 
-                    <button
-                        className="btn-explore"
-                        onClick={() => navigate('/notes')}
-                    >
-                        Explore All Resources <ArrowRight size={20} />
-                    </button>
-
-                    <div className="home-stats-bar">
-                        <AnimatedCounter value={stats.visits} label="Total Visits" />
-                        <div className="stat-divider"></div>
-                        <AnimatedCounter value={stats.users} label="Verified Users" />
-                        <div className="stat-divider"></div>
-                        <AnimatedCounter value={stats.resources} label="Available Resources" />
-                    </div>                </div>
+                        <div className="home-stats-bar">
+                            <AnimatedCounter value={stats.visits} label="Total Visits" />
+                            <div className="stat-divider"></div>
+                            <AnimatedCounter value={stats.users} label="Verified Users" />
+                            <div className="stat-divider"></div>
+                            <AnimatedCounter value={stats.resources} label="Available Resources" />
+                        </div>                </div>
             </main>
 
             {/* What People Say - Scrolling Marquee Section */}
@@ -291,7 +290,7 @@ export default function Home() {
                                     </div>
                                     <div>
                                         <strong>{user.displayName}</strong>
-                                        <p>Contribution from DTEHub Alumnus</p>
+                                        <p>Contribution from Same College Community</p>
                                     </div>
                                 </div>
 
@@ -328,7 +327,7 @@ export default function Home() {
 
                                 <textarea
                                     className="feedback-textarea"
-                                    placeholder="Tell others how DTEHub helped you in your academics..."
+                                    placeholder="Tell others how Same College helped you in your academics..."
                                     value={feedbackMsg}
                                     onChange={(e) => setFeedbackMsg(e.target.value)}
                                     maxLength={200}

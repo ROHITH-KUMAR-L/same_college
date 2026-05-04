@@ -1,7 +1,8 @@
 import { useAuthContext } from '../context/AuthContext';
-import { LogIn, ShieldCheck } from 'lucide-react';
+import { LogIn, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, allowedRoles }) {
     const { user, loading, loginWithGoogle } = useAuthContext();
 
     if (loading) {
@@ -34,22 +35,47 @@ export default function ProtectedRoute({ children }) {
                 </div>
                 <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Sign In Required</h2>
                 <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '400px' }}>
-                    You need to sign in to access this page. Please sign in with your Google account to continue.
+                    You need to sign in to access this page. Please sign in to continue.
+                </p>
+            </div>
+        );
+    }
+
+    // Role-based Access Control
+    if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        return (
+            <div className="flex-center" style={{
+                minHeight: '60vh',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                textAlign: 'center',
+                padding: '2rem'
+            }}>
+                <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    <ShieldAlert size={40} style={{ color: '#ef4444' }} />
+                </div>
+                <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Access Denied</h2>
+                <p style={{ color: 'var(--text-muted)', margin: 0, maxWidth: '400px' }}>
+                    You do not have the required permissions to view this page. This area is restricted to specific roles.
                 </p>
                 <button
                     className="btn-primary"
-                    onClick={loginWithGoogle}
+                    onClick={() => window.history.back()}
                     style={{
                         marginTop: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
                         padding: '0.75rem 1.75rem',
                         fontSize: '1rem'
                     }}
                 >
-                    <LogIn size={18} />
-                    Sign In with Google
+                    Go Back
                 </button>
             </div>
         );

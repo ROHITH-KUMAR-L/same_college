@@ -1,12 +1,4 @@
-<p align="center">
-  <img src="public/Logo.jpeg" alt="DTEHub Logo" width="120" height="120" style="border-radius: 20px;" />
-</p>
 
-<h1 align="center">DTEHub</h1>
-
-<p align="center">
-  <strong>Your one-stop academic resource hub for Diploma students.</strong>
-</p>
 
 <p align="center">
   <a href="https://dte-hub.web.app/">🌐 Live Site</a> &nbsp;·&nbsp;

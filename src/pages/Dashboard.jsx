@@ -20,12 +20,62 @@ import './Admin.css'; // Reusing admin grid styles
 export default function StudentDashboard() {
     const { user } = useAuthContext();
     const navigate = useNavigate();
-    const [attendanceData] = useState([
-        { subject: 'Database Systems', percentage: 85, status: 'Good' },
-        { subject: 'Software Engineering', percentage: 68, status: 'Critical' },
-        { subject: 'Computer Networks', percentage: 72, status: 'Warning' },
-        { subject: 'Web Programming', percentage: 95, status: 'Excellent' },
+    const [attendanceData, setAttendanceData] = useState([
+        { subject: 'Database Systems', percentage: 0, status: '...' },
+        { subject: 'Software Engineering', percentage: 0, status: '...' },
+        { subject: 'Computer Networks', percentage: 0, status: '...' },
+        { subject: 'Web Programming', percentage: 0, status: '...' },
     ]);
+    const [loadingAttendance, setLoadingAttendance] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const subjects = [
+            { code: 'CS302', name: 'Database Systems' },
+            { code: 'CS401', name: 'Software Engineering' },
+            { code: 'CS303', name: 'Computer Networks' },
+            { code: 'CS402', name: 'Web Programming' }
+        ];
+
+        const attendanceRef = ref(database, 'attendance_records');
+        const unsubscribe = onValue(attendanceRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const allData = snapshot.val();
+                
+                const updatedData = subjects.map(sub => {
+                    const courseRecords = allData[sub.code] || {};
+                    const totalClasses = Object.keys(courseRecords).length;
+                    let classesAttended = 0;
+
+                    Object.keys(courseRecords).forEach(date => {
+                        if (courseRecords[date][user.uid]) {
+                            classesAttended++;
+                        }
+                    });
+
+                    const percentage = totalClasses === 0 ? 0 : Math.round((classesAttended / totalClasses) * 100);
+                    
+                    let status = 'Excellent';
+                    if (percentage < 75) status = 'Critical';
+                    else if (percentage < 85) status = 'Warning';
+                    else if (percentage < 90) status = 'Good';
+
+                    return {
+                        subject: sub.name,
+                        percentage,
+                        status,
+                        classesNeeded: Math.max(0, Math.ceil((0.75 * (totalClasses + 5) - classesAttended))) // Rough estimate for warning
+                    };
+                });
+
+                setAttendanceData(updatedData);
+            }
+            setLoadingAttendance(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
 
     const events = [
         { date: 'May 10', title: 'Internal Assessment - I', type: 'Exam' },
@@ -93,7 +143,7 @@ export default function StudentDashboard() {
                                     
                                     {item.percentage < 75 && (
                                         <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.75rem', color: '#f87171' }}>
-                                            <strong>Warning:</strong> You need to attend 5 more classes to reach 75%.
+                                            <strong>Warning:</strong> You need to attend {item.classesNeeded} more classes to reach 75%.
                                         </div>
                                     )}
                                 </div>

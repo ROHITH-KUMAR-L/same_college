@@ -6,36 +6,27 @@ import {
     Clock, 
     Calendar, 
     Plus, 
-<<<<<<< HEAD
     ArrowUpRight, 
     MessageSquare, 
     FileText, 
     Zap, 
     UserCheck, 
     Book, 
-    LogOut 
-=======
-    Zap, 
-    ShieldCheck, 
-    ShieldAlert, 
-    MessageSquare, 
-    FileText, 
+    LogOut,
     ChevronRight,
     UserCircle,
-    Info
->>>>>>> 49bb92a (sync: latest leave portal and ai assistant upgrades)
+    Info,
+    ShieldCheck,
+    ShieldAlert
 } from 'lucide-react';
 import { ref, onValue, set, push, serverTimestamp, remove, update } from 'firebase/database';
 import { database } from '../firebase';
 import './Admin.css';
-<<<<<<< HEAD
 
 import AttendanceManager from '../components/faculty/AttendanceManager';
 import ScheduleManager from '../components/faculty/ScheduleManager';
 import LeaveManager from '../components/faculty/LeaveManager';
 import ResourceManager from '../components/faculty/ResourceManager';
-=======
->>>>>>> 49bb92a (sync: latest leave portal and ai assistant upgrades)
 
 export default function FacultyDashboard() {
     const { user } = useAuthContext();
@@ -105,27 +96,6 @@ function OverviewTab() {
     const [isScanning, setIsScanning] = useState(false);
     const [sessionId, setSessionId] = useState(null);
     const [detectedCount, setDetectedCount] = useState(0);
-    const [pendingLeaves, setPendingLeaves] = useState([]);
-
-    useEffect(() => {
-        const leavesRef = ref(database, 'admin_leaves');
-        const unsubscribe = onValue(leavesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-                setPendingLeaves(list.reverse());
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
-    const handleActionLeave = (leaveId, studentUid, newStatus) => {
-        // Update both the global record and the student's personal record
-        const updates = {};
-        updates[`admin_leaves/${leaveId}/status`] = newStatus;
-        updates[`users/${studentUid}/leaves/${leaveId}/status`] = newStatus;
-        update(ref(database), updates);
-    };
 
     useEffect(() => {
         if (isScanning && !sessionId) {
@@ -225,76 +195,12 @@ function OverviewTab() {
                     </div>
                 </div>
 
-<<<<<<< HEAD
                 <div className="admin-card" style={{ padding: '2rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginBottom: '1.5rem' }}>Today's Classes</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <ClassItem time="09:00 AM" title="Advanced ML" room="L-402" students="48" status="Completed" />
                         <ClassItem time="11:30 AM" title="Database Systems" room="Lab-12" students="62" status="In Progress" active />
                         <ClassItem time="02:00 PM" title="Software Architecture" room="Online" students="72" status="Upcoming" />
-=======
-                {/* Upcoming Classes */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div className="admin-card" style={{ padding: '2rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginBottom: '1.5rem' }}>Today's Classes</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <ClassItem time="09:00 AM" title="Advanced ML" room="L-402" students="48" status="Completed" />
-                            <ClassItem time="11:30 AM" title="Database Systems" room="Lab-12" students="62" status="In Progress" active />
-                            <ClassItem time="02:00 PM" title="Software Architecture" room="Online" students="72" status="Upcoming" />
-                        </div>
-                    </div>
-
-                    {/* AI Leave Review Section */}
-                    <div className="admin-card" style={{ padding: '2rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                <ShieldCheck size={20} color="var(--accent-color)" /> Leave Approvals
-                            </h2>
-                            <span className="premium-badge">{pendingLeaves.length} Pending</span>
-                        </div>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '400px', overflowY: 'auto' }} className="custom-scrollbar">
-                            {pendingLeaves.length > 0 ? pendingLeaves.map(leave => (
-                                <div key={leave.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-color)', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: '900' }}>
-                                                {leave.studentName?.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'white' }}>{leave.studentName}</div>
-                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{leave.type}</div>
-                                            </div>
-                                        </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontSize: '0.75rem', fontWeight: '800', color: leave.status === 'Approved' ? '#22c55e' : '#facc15' }}>
-                                                {leave.status === 'Approved' ? 'AI APPROVED' : 'PENDING REVIEW'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p style={{ fontSize: '0.8rem', color: 'white', margin: '0.75rem 0', lineHeight: '1.4' }}>"{leave.reason}"</p>
-                                    
-                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                                            <Zap size={14} color="var(--accent-color)" />
-                                            <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--accent-color)', textTransform: 'uppercase' }}>AI Reasoning</span>
-                                        </div>
-                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{leave.aiReasoning}</p>
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button className="btn-primary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem' }} onClick={() => handleActionLeave(leave.id, leave.uid, 'Approved')}>Approve</button>
-                                        <button className="btn-outline" style={{ flex: 1, padding: '0.4rem', fontSize: '0.75rem', borderColor: '#ef4444', color: '#ef4444' }} onClick={() => handleActionLeave(leave.id, leave.uid, 'Rejected')}>Reject</button>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.2)' }}>
-                                    <Info size={32} style={{ marginBottom: '1rem' }} />
-                                    <p style={{ fontSize: '0.8rem' }}>No pending leave applications.</p>
-                                </div>
-                            )}
-                        </div>
->>>>>>> 49bb92a (sync: latest leave portal and ai assistant upgrades)
                     </div>
                 </div>
             </div>

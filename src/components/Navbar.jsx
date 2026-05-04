@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Clock } from 'lucide-react';
+import { GraduationCap, LogOut, Home, FileText, ScrollText, Zap, Heart, Clock, BarChart3 } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import LoginModal from './LoginModal';
 import '../App.css';
@@ -25,8 +25,11 @@ export default function Navbar() {
                     {/* Desktop nav links */}
                     <div className="nav-links nav-desktop-only">
                         <Link to="/" className={`nav-item ${isActive('/')}`}>Home</Link>
+                        {user && (
+                            <Link to="/dashboard" className={`nav-item ${isActive('/dashboard')}`}>Dashboard</Link>
+                        )}
                         <Link to="/notes" className={`nav-item ${isActive('/notes')}`}>Notes</Link>
-                        <Link to="/dcet" className={`nav-item ${isActive('/dcet')}`}>Contest    </Link>
+                        <Link to="/papers" className={`nav-item ${isActive('/papers')}`}>Previous Year Question Paper</Link>
                         <Link to="/timetable" className={`nav-item ${isActive('/timetable')}`}>Time Table</Link>
                         {user?.role === 'ADMIN' && (
                             <Link to="/admin" className={`nav-item ${isActive('/admin')}`}>Admin</Link>
@@ -72,13 +75,17 @@ export default function Navbar() {
                     <Home size={20} />
                     <span>Home</span>
                 </Link>
+                <Link to="/dashboard" className={`mobile-nav-item ${isActive('/dashboard')}`}>
+                    <BarChart3 size={20} />
+                    <span>Hub</span>
+                </Link>
                 <Link to="/notes" className={`mobile-nav-item ${isActive('/notes')}`}>
                     <FileText size={20} />
                     <span>Resources</span>
                 </Link>
-                <Link to="/dcet" className={`mobile-nav-item ${isActive('/dcet')}`}>
-                    <Zap size={20} />
-                    <span>DCET</span>
+                <Link to="/papers" className={`mobile-nav-item ${isActive('/papers')}`}>
+                    <FileText size={20} />
+                    <span>Papers</span>
                 </Link>
                 <Link to="/timetable" className={`mobile-nav-item ${isActive('/timetable')}`}>
                     <Clock size={20} />

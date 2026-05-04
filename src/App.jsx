@@ -7,7 +7,9 @@ import ProfileOnboardingModal from './components/ProfileOnboardingModal';
 import Home from './pages/Home';
 import Notes from './pages/Notes';
 import Profile from './pages/Profile';
-import DCET from './pages/DCET';
+import Dashboard from './pages/Dashboard';
+import StudyAssistant from './pages/StudyAssistant';
+import Leaves from './pages/Leaves';
 import Timetable from './pages/Timetable';
 import Admin from './pages/Admin';
 import Faculty from './pages/Faculty';
@@ -29,11 +31,13 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
               <Route path="/papers" element={<ProtectedRoute><Papers /></ProtectedRoute>} />
-              <Route path="/dcet" element={<ProtectedRoute><DCET /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/study-assistant" element={<ProtectedRoute><StudyAssistant /></ProtectedRoute>} />
+              <Route path="/leaves" element={<ProtectedRoute><Leaves /></ProtectedRoute>} />
               <Route path="/timetable" element={<ProtectedRoute><Timetable /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-              <Route path="/faculty" element={<ProtectedRoute><Faculty /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><Admin /></ProtectedRoute>} />
+              <Route path="/faculty" element={<ProtectedRoute allowedRoles={['FACULTY', 'ADMIN']}><Faculty /></ProtectedRoute>} />
               <Route path="/mark-attendance" element={<MarkAttendance />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
             </Routes>
@@ -41,8 +45,6 @@ function App() {
           {/* Global Workspace Dock — visible on every page */}
           <WorkspaceDock />
 
-          {/* Profile Onboarding Modal for first-time sign-ins */}
-          <ProfileOnboardingModal />
         </div>
       </AuthProvider>
     </Router>

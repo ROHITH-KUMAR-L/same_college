@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { ref, set, get, serverTimestamp, runTransaction } from 'firebase/database';
+import { ref, set, get, onValue, serverTimestamp, runTransaction } from 'firebase/database';
 import { auth, googleProvider, database } from '../firebase';
 
 export function useAuth() {
@@ -25,67 +25,76 @@ export function useAuth() {
     };
     handleRedirect();
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
+          // Set basic user info first
           setUser(firebaseUser);
-          try {
-            const userRef = ref(database, `users/${firebaseUser.uid}`);
-            const snapshot = await get(userRef);
-            const existingData = snapshot.val() || {};
+          
+          const userRef = ref(database, `users/${firebaseUser.uid}`);
+          const snapshot = await get(userRef);
+          const existingData = snapshot.val() || {};
+          
+          // Determine initial role
+          let role = "STUDENT";
+          const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+          const facultyEmail = import.meta.env.VITE_FACULTY_EMAIL;
+          const studentEmail = import.meta.env.VITE_STUDENT_EMAIL;
 
-            // Determine Role based on Email
-            let role = "STUDENT";
-            const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-            const facultyEmail = import.meta.env.VITE_FACULTY_EMAIL;
-            const studentEmail = import.meta.env.VITE_STUDENT_EMAIL;
+          if (firebaseUser.email === adminEmail) role = "ADMIN";
+          else if (firebaseUser.email === facultyEmail) role = "FACULTY";
+          else if (firebaseUser.email === studentEmail) role = "STUDENT";
+          else if (existingData.role) role = existingData.role;
 
-            if (firebaseUser.email === adminEmail) {
-              role = "ADMIN";
-            } else if (firebaseUser.email === facultyEmail) {
-              role = "FACULTY";
-            } else if (firebaseUser.email === studentEmail) {
-              role = "STUDENT";
-            } else if (existingData.role) {
-              role = existingData.role;
-            }
-
-
-            if (!existingData.createdAt) {
-              const statsRef = ref(database, 'stats/totalVerifiedUsers');
-              runTransaction(statsRef, (count) => {
-                return (count || 0) + 1;
-              }).catch(err => console.error('Same College Auth: Verification metric error:', err));
-            }
-
-            const userData = {
-              ...existingData,
-              uid: firebaseUser.uid,
-              displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-              email: firebaseUser.email,
-              photoURL: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${firebaseUser.email}&background=random`,
-              emailVerified: firebaseUser.emailVerified || false,
-              lastLoginAt: serverTimestamp(),
-              role: role,
-              ...(existingData.createdAt ? {} : { createdAt: serverTimestamp() }),
-            };
-
-            await set(userRef, userData);
-            // Update local user state with role
-            setUser({ ...firebaseUser, role });
-          } catch (dbError) {
-            console.error('Same College Auth: Profile sync anomaly:', dbError);
+          if (!existingData.createdAt) {
+            const statsRef = ref(database, 'stats/totalVerifiedUsers');
+            runTransaction(statsRef, (count) => (count || 0) + 1).catch(err => console.error('Verification metric error:', err));
           }
+
+          const userData = {
+            ...existingData,
+            uid: firebaseUser.uid,
+            displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+            email: firebaseUser.email,
+            photoURL: firebaseUser.photoURL || `https://ui-avatars.com/api/?name=${firebaseUser.email}&background=random`,
+            emailVerified: firebaseUser.emailVerified || false,
+            lastLoginAt: serverTimestamp(),
+            role: role,
+            ...(existingData.createdAt ? {} : { createdAt: serverTimestamp() }),
+          };
+
+          await set(userRef, userData);
         } else {
           setUser(null);
         }
+      } catch (err) {
+        console.error("Auth sync error:", err);
       } finally {
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
+
+  // Real-time role sync
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const userRef = ref(database, `users/${user.uid}`);
+    const unsubscribe = onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.role !== user.role) {
+        setUser(prev => ({ 
+          ...prev, 
+          role: data.role || "STUDENT",
+          profile: data.profile || {}
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   const loginWithGoogle = async () => {
     try {

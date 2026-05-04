@@ -1,18 +1,40 @@
-import { useState } from 'react';
-import { Calendar, Clock, MapPin, Search, ChevronRight, Download } from 'lucide-react';
-import './Notes.css'; // Reusing layout styles
+import { useState, useEffect } from 'react';
+import { Calendar, Clock, MapPin, ChevronRight, Download, Filter, Info } from 'lucide-react';
+import { useAuthContext } from '../context/AuthContext';
+import { ref, onValue } from 'firebase/database';
+import { database } from '../firebase';
+import './Notes.css';
 
 export default function Timetable() {
-    const [selectedBranch, setSelectedBranch] = useState('Computer Science');
-    const [selectedSem, setSelectedSem] = useState('4th Sem');
+    const { user, preferences } = useAuthContext();
+    const [selectedBranch, setSelectedBranch] = useState(preferences?.branch || 'Computer Science');
+    const [selectedSem, setSelectedSem] = useState(preferences?.semester || '1st Sem');
+    const [timetableData, setTimetableData] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [currentDay] = useState(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
 
-    const schedule = [
-        { time: '09:00 AM - 10:00 AM', subject: 'Software Engineering', room: 'L-302', type: 'Lecture' },
-        { time: '10:00 AM - 11:00 AM', subject: 'Database Systems', room: 'L-302', type: 'Lecture' },
-        { time: '11:30 AM - 01:30 PM', subject: 'Web Programming Lab', room: 'Lab-05', type: 'Lab' },
-        { time: '02:00 PM - 03:00 PM', subject: 'Python Programming', room: 'L-302', type: 'Lecture' },
-        { time: '03:00 PM - 04:00 PM', subject: 'Communication Skills', room: 'Seminar Hall', type: 'Workshop' },
+    useEffect(() => {
+        const ttRef = ref(database, 'timetable');
+        const unsubscribe = onValue(ttRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setTimetableData(data);
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    // Fallback static schedule if DB is empty
+    const defaultSchedule = [
+        { time: '09:00 AM', subject: 'Mathematics III', room: 'L-101', type: 'Lecture', duration: '1hr' },
+        { time: '10:00 AM', subject: 'Digital Electronics', room: 'L-101', type: 'Lecture', duration: '1hr' },
+        { time: '11:15 AM', subject: 'Data Structures', room: 'Lab-1', type: 'Lab', duration: '2hrs' },
+        { time: '02:00 PM', subject: 'Analog Circuits', room: 'L-102', type: 'Lecture', duration: '1hr' },
+        { time: '03:00 PM', subject: 'Soft Skills', room: 'Seminar Hall', type: 'Workshop', duration: '1hr' },
     ];
+
+    const currentSchedule = timetableData[selectedBranch]?.[selectedSem]?.[currentDay] || defaultSchedule;
 
     return (
         <div className="notes-page-wrapper premium-page" style={{ paddingTop: '5rem', minHeight: '100vh' }}>
@@ -78,41 +100,79 @@ export default function Timetable() {
                             <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{selectedBranch} • {selectedSem}</span>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {schedule.map((item, index) => (
-                                <div key={index} style={{ 
-                                    background: 'rgba(255,255,255,0.02)', 
-                                    padding: '1.5rem', 
-                                    borderRadius: '20px', 
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '1.5rem',
-                                    transition: 'all 0.3s ease'
-                                }} className="schedule-item-hover">
-                                    <div style={{ minWidth: '160px', color: 'var(--accent-color)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <Clock size={16} /> {item.time}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem' }}>{item.subject}</div>
-                                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem' }}>
-                                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                <MapPin size={14} /> {item.room}
-                                            </span>
-                                            <span style={{ 
-                                                fontSize: '0.7rem', 
-                                                fontWeight: '900', 
-                                                textTransform: 'uppercase', 
-                                                background: item.type === 'Lab' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(168, 85, 247, 0.1)',
-                                                color: item.type === 'Lab' ? '#3b82f6' : '#a855f7',
-                                                padding: '0.2rem 0.5rem',
-                                                borderRadius: '6px'
-                                            }}>{item.type}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {currentSchedule.map((item, index) => {
+                                // Real-time class detection logic
+                                const now = new Date();
+                                const currentHour = now.getHours();
+                                const currentMin = now.getMinutes();
+                                
+                                // Parse item time (e.g., "09:00 AM")
+                                const [timePart, ampm] = item.time.split(' ');
+                                let [hour, min] = timePart.split(':').map(Number);
+                                if (ampm === 'PM' && hour < 12) hour += 12;
+                                if (ampm === 'AM' && hour === 12) hour = 0;
+                                
+                                const startTotalMin = hour * 60 + min;
+                                const nowTotalMin = currentHour * 60 + currentMin;
+                                const duration = parseInt(item.duration) || 1;
+                                const endTotalMin = startTotalMin + (duration * 60);
+                                
+                                const isCurrent = nowTotalMin >= startTotalMin && nowTotalMin < endTotalMin;
+
+                                return (
+                                    <div key={index} className={`timetable-card ${isCurrent ? 'active-slot' : ''}`} style={{
+                                        background: isCurrent ? 'rgba(253, 224, 71, 0.05)' : 'rgba(255,255,255,0.02)',
+                                        padding: '1.5rem',
+                                        borderRadius: '24px',
+                                        border: isCurrent ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '2rem',
+                                        position: 'relative',
+                                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                    }}>
+                                        {isCurrent && (
+                                            <div style={{ position: 'absolute', top: '1rem', right: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <span className="live-indicator"></span>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: '900', color: 'var(--accent-color)' }}>LIVE NOW</span>
+                                            </div>
+                                        )}
+
+                                        <div style={{ minWidth: '100px' }}>
+                                            <div style={{ fontSize: '1.25rem', fontWeight: '900', color: 'white' }}>{item.time.split(' ')[0]}</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>{item.time.split(' ')[1] || 'AM'}</div>
                                         </div>
+
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
+                                                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', margin: 0 }}>{item.subject}</h3>
+                                                <span style={{ 
+                                                    fontSize: '0.65rem', 
+                                                    fontWeight: '900', 
+                                                    padding: '0.25rem 0.6rem', 
+                                                    borderRadius: '6px',
+                                                    background: item.type === 'Lab' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(168, 85, 247, 0.1)',
+                                                    color: item.type === 'Lab' ? '#3b82f6' : '#a855f7',
+                                                    border: `1px solid ${item.type === 'Lab' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(168, 85, 247, 0.2)'}`
+                                                }}>{item.type}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '1.5rem' }}>
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                    <MapPin size={14} color="var(--accent-color)" /> {item.room}
+                                                </span>
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                    <Clock size={14} /> {item.duration || '1 hr'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button className="circle-btn-small">
+                                            <ChevronRight size={18} />
+                                        </button>
                                     </div>
-                                    <ChevronRight size={20} color="rgba(255,255,255,0.1)" />
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

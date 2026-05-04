@@ -37,16 +37,18 @@ export default function Papers() {
         }
     }, [user]);
 
-    // Fetch Papers from Database
+    // Fetch Papers from Database (stored under notes with type='Paper')
     useEffect(() => {
-        const papersRef = ref(database, 'resources/papers');
+        const papersRef = ref(database, 'resources/notes');
         const unsubscribe = onValue(papersRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const arr = Object.keys(data).map(key => ({
-                    id: key,
-                    ...data[key]
-                }));
+                const arr = Object.keys(data)
+                    .map(key => ({
+                        id: key,
+                        ...data[key]
+                    }))
+                    .filter(item => item.isFolder || item.type === 'Paper');
                 setPapersData(arr.reverse());
             } else {
                 setPapersData([]);
@@ -66,9 +68,9 @@ export default function Papers() {
             addRecentlyViewed({
                 itemId: paper.id,
                 type: 'paper',
-                title: paper.subject,
-                year: paper.year,
-                paperType: paper.type,
+                title: paper.subject || paper.title || 'Untitled',
+                year: paper.academicYear || paper.semester || '',
+                paperType: paper.type || 'Paper',
             });
         }
     };
@@ -89,9 +91,9 @@ export default function Papers() {
             addDownload({
                 itemId: paper.id,
                 type: 'paper',
-                title: paper.subject,
-                year: paper.year,
-                paperType: paper.type,
+                title: paper.subject || paper.title || 'Untitled',
+                year: paper.academicYear || paper.semester || '',
+                paperType: paper.type || 'Paper',
             });
         }
 
@@ -103,8 +105,8 @@ export default function Papers() {
             toggleFavorite({
                 itemId: paper.id,
                 type: 'paper',
-                title: paper.subject,
-                year: paper.year,
+                title: paper.subject || paper.title || 'Untitled',
+                year: paper.academicYear || paper.semester || '',
             });
         }
     };
@@ -118,15 +120,16 @@ export default function Papers() {
     const filteredPapers = papersData.filter(paper => {
         // Hierarchy check
         const matchesFolder = (currentFolder?.id || 'root') === (paper.parentId || 'root');
+        if (paper.isFolder && matchesFolder) return true;
         
-        // Contextual filters
-        const matchesYear = !userYear || userYear === 'Alumni' || paper.academicYear === userYear || paper.academicYear === 'Common' || !paper.academicYear;
-        const matchesBranch = !userBranch || paper.branch === userBranch || paper.branch === 'Common' || !paper.branch;
-        
-        const matchesFilterYear = !selYear || paper.academicYear === selYear;
-        const matchesFilterSubject = !selSubject || (paper.subject && paper.subject.toLowerCase().includes(selSubject.toLowerCase()));
+        const pYear = paper.academicYear || paper.semester || '';
+        const pSubject = paper.subject || paper.title || '';
 
-        return matchesFolder && matchesYear && matchesBranch && matchesFilterYear && matchesFilterSubject;
+        // Contextual filters (removed strict user profile overrides to allow all visibility)
+        const matchesFilterYear = !selYear || pYear === selYear;
+        const matchesFilterSubject = !selSubject || (pSubject && pSubject.toLowerCase().includes(selSubject.toLowerCase()));
+
+        return matchesFolder && matchesFilterYear && matchesFilterSubject;
     });
 
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -137,9 +140,7 @@ export default function Papers() {
                 <div>
                     <h1 className="page-title">Previous Year Question Papers</h1>
                     <p className="page-subtitle">
-                        {userYear && userYear !== 'Alumni' 
-                            ? `Showing filtered papers for your academic year (${userYear})` 
-                            : 'Access and manage academic papers for all courses and years.'}
+                        Access and manage previous year question papers across all branches and semesters.
                     </p>
                 </div>
 

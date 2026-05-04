@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, X, History, Heart, Download, FileText, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
-import InstallPWA from './InstallPWA';
+
 
 export default function WorkspaceDock() {
     const navigate = useNavigate();
@@ -133,10 +133,7 @@ export default function WorkspaceDock() {
                     </div>
                 )}
 
-                <div className="ws-panel-footer">
-                    <InstallPWA />
                 </div>
-            </div>
 
             {/* Detailed Modal Popup */}
             {activeSection && (

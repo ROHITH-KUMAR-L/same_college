@@ -1,20 +1,6 @@
 
 
-<p align="center">
-  <a href="https://dte-hub.web.app/">🌐 Live Site</a> &nbsp;·&nbsp;
-  <a href="https://github.com/Tech-Astra/DTEHub/issues">🐛 Report Bug</a> &nbsp;·&nbsp;
-  <a href="https://github.com/Tech-Astra/DTEHub/issues">💡 Request Feature</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/Tech-Astra/DTEHub"><img src="https://img.shields.io/github/stars/Tech-Astra/DTEHub?style=for-the-badge&logo=github&color=yellow" alt="Stars" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License" /></a>
-  <a href="https://dte-hub.web.app/"><img src="https://img.shields.io/badge/Status-Live-brightgreen?style=for-the-badge" alt="Status" /></a>
-</p>
-
----
-
-**DTEHub** is a premium, open-source academic resource platform designed specifically for Diploma students. It serves as a centralized hub for accessing study materials, previous year question papers, and DCET preparation resources — all wrapped in a modern, beautiful UI.
+**same college* is a premium, open-source academic resource platform designed specifically for Diploma students. It serves as a centralized hub for accessing study materials, previous year question papers, and DCET preparation resources — all wrapped in a modern, beautiful UI.
 
 ## ✨ Key Features
 
@@ -44,7 +30,7 @@
 ## 📂 Project Structure
 
 ```text
-DTEHub/
+same college/
 ├── public/              # Static assets (logo, favicon, manifest, service worker)
 ├── src/
 │   ├── components/      # Reusable UI components (Navbar, Dock, Modals)
@@ -71,8 +57,8 @@ DTEHub/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Tech-Astra/DTEHub.git
-cd DTEHub
+git clone https://github.com/Tech-Astra/same college.git
+cd same college
 
 # Install dependencies
 npm install
@@ -112,15 +98,10 @@ We welcome contributions from the community! Whether you want to add new notes, 
 
 For inquiries, resource submissions, or partnership opportunities:
 
-**Email:** [contactus.techastra@gmail.com](mailto:contactus.techastra@gmail.com)
-**GitHub:** [Tech-Astra](https://github.com/Tech-Astra)
-
 ## 📄 License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
 
 ---
 
-<p align="center">
-  Built with ❤️ by <a href="https://github.com/Tech-Astra">Tech-Astra</a>
-</p>
+

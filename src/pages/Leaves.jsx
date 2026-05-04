@@ -14,10 +14,11 @@ import {
     ShieldCheck,
     ShieldAlert,
     Upload,
-    Check
+    Check,
+    Eye
 } from 'lucide-react';
 import { useRef } from 'react';
-import { ref, push, set, onValue, serverTimestamp } from 'firebase/database';
+import { ref, push, set, onValue, serverTimestamp, update } from 'firebase/database';
 import { database } from '../firebase';
 import { getAIResponse } from '../utils/ai';
 import './Admin.css';
@@ -37,6 +38,8 @@ export default function LeavePortal() {
         casual: 5,
         duty: 'Unlimited'
     });
+    const [aiEvaluation, setAiEvaluation] = useState(null);
+    const [showResultModal, setShowResultModal] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -75,7 +78,7 @@ export default function LeavePortal() {
         setIsSubmitting(true);
 
         try {
-            // AI Automated Review with Document Analysis
+            // AI Automated Review with Document Analysis & Scoring
             const docInfo = attachedFile ? `Document Attached: ${attachedFile.name}` : "NO DOCUMENT ATTACHED";
             
             const aiPrompt = `Act as an academic administrator. Review this student leave application:
@@ -84,21 +87,28 @@ export default function LeavePortal() {
             Duration: ${fromDate} to ${toDate}
             Supporting Evidence: ${docInfo}
             
-            Policy: 
-            - If "Duty Leave" has a specific event name and a document is attached, APPROVE.
-            - If "Medical" has a clear reason and a document is attached, APPROVE.
-            - If NO document is attached, set to 'Pending' for manual verification unless it's a minor personal reason.
+            Evaluate based on:
+            1. Authenticity of reason.
+            2. Match between reason and Leave Type.
+            3. Presence of supporting document.
             
-            Return ONLY a JSON object: {"status": "Approved" | "Pending", "reasoning": "Brief explanation mentioning the document verification"}`;
+            Return ONLY a JSON object: {
+                "status": "Approved" | "Pending", 
+                "score": number (0-100), 
+                "reasoning": "Detailed explanation of why this score was given",
+                "summary": "1-sentence verdict"
+            }`;
             
             const aiResultRaw = await getAIResponse([{ role: 'user', content: aiPrompt }]);
-            let aiResult = { status: 'Pending', reasoning: 'Manual verification required.' };
+            let aiResult = { status: 'Pending', score: 50, reasoning: 'Manual verification required.', summary: 'Review pending.' };
             try {
                 const jsonStr = aiResultRaw.substring(aiResultRaw.indexOf('{'), aiResultRaw.lastIndexOf('}') + 1);
                 aiResult = JSON.parse(jsonStr);
             } catch (e) {
                 console.error("AI Parse Error", e);
             }
+
+            setAiEvaluation(aiResult);
 
             const leavesRef = ref(database, `users/${user.uid}/leaves`);
             const newLeaveRef = push(leavesRef);
@@ -109,6 +119,7 @@ export default function LeavePortal() {
                 from: fromDate,
                 to: toDate,
                 status: aiResult.status,
+                aiScore: aiResult.score,
                 aiReasoning: aiResult.reasoning,
                 documentName: attachedFile ? attachedFile.name : null,
                 submittedAt: serverTimestamp(),
@@ -122,7 +133,7 @@ export default function LeavePortal() {
 
             // Deduct balance if AI Approved
             if (aiResult.status === 'Approved') {
-                const typeKey = leaveType.toLowerCase().split(' ')[0]; // 'medical' or 'casual'
+                const typeKey = leaveType.toLowerCase().split(' ')[0];
                 if (typeKey === 'medical' || typeKey === 'personal') {
                     const balanceKey = typeKey === 'personal' ? 'casual' : 'medical';
                     if (typeof leaveBalance[balanceKey] === 'number') {
@@ -133,9 +144,9 @@ export default function LeavePortal() {
                 }
             }
 
-            setIsApplyOpen(false);
             setReason('');
             setAttachedFile(null);
+            setShowResultModal(true);
         } catch (error) {
             console.error("Leave Application Error", error);
         } finally {
@@ -362,6 +373,44 @@ export default function LeavePortal() {
                                 {isSubmitting ? 'AI Evaluating...' : 'Submit Application'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* AI Result Evaluation Modal */}
+            {showResultModal && aiEvaluation && (
+                <div className="test-modal-overlay" onClick={() => setShowResultModal(false)}>
+                    <div className="test-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center' }}>
+                        <div style={{ width: '100px', height: '100px', margin: '0 auto 1.5rem', position: 'relative' }}>
+                            <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%' }}>
+                                <path stroke="rgba(255,255,255,0.05)" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path stroke="var(--accent-color)" strokeWidth="3" strokeDasharray={`${aiEvaluation.score}, 100`} strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '1.25rem', fontWeight: '900', color: 'white' }}>
+                                {aiEvaluation.score}%
+                            </div>
+                        </div>
+
+                        <h2 style={{ fontSize: '1.75rem', fontWeight: '900', color: 'white', marginBottom: '0.5rem' }}>
+                            {aiEvaluation.status === 'Approved' ? 'AI Approved!' : 'Manual Review Required'}
+                        </h2>
+                        <p style={{ color: aiEvaluation.status === 'Approved' ? '#22c55e' : 'var(--accent-color)', fontWeight: '800', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                            {aiEvaluation.summary}
+                        </p>
+
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '1.5rem', textAlign: 'left', marginBottom: '2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <Sparkles size={16} color="var(--accent-color)" />
+                                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Detailed AI Analysis</span>
+                            </div>
+                            <p style={{ fontSize: '0.85rem', color: 'white', lineHeight: '1.6', margin: 0 }}>
+                                {aiEvaluation.reasoning}
+                            </p>
+                        </div>
+
+                        <button className="btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={() => { setShowResultModal(false); setIsApplyOpen(false); }}>
+                            Got it, thanks!
+                        </button>
                     </div>
                 </div>
             )}

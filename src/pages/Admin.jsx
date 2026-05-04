@@ -846,8 +846,8 @@ export default function Admin() {
                                         <div className="chart-header">
                                             <BarChart3 size={18} /> Resource Categories
                                         </div>
-                                        <div className="chart-body" style={{ width: '100%', height: 250 }}>
-                                            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                                        <div className="chart-body" style={{ width: '100%', height: 250, minWidth: 1, minHeight: 1 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
                                                 <BarChart data={catData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                                     <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />

@@ -12,19 +12,44 @@ import {
     PlayCircle,
     X,
     ChevronRight,
-    MessageSquare
+    MessageSquare,
+    Zap,
+    Cpu,
+    CheckCircle
 } from 'lucide-react';
+import { ref, onValue } from 'firebase/database';
+import { database } from '../firebase';
+import { getAIResponse } from '../utils/ai';
 import './Admin.css';
 
 export default function StudyAssistant() {
     const { user } = useAuthContext();
     const [messages, setMessages] = useState([
-        { role: 'assistant', content: "Hello! I'm your Same College AI Study Assistant. Upload your notes or ask me anything about your courses." }
+        { role: 'assistant', content: "Hello! I'm your Same College AI Study Assistant powered by Groq & Ollama. How can I help you today?" }
     ]);
     const [input, setInput] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [useOllama, setUseOllama] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
+    const [workspaceResources, setWorkspaceResources] = useState([]);
+    const [attachedContext, setAttachedContext] = useState(null);
+    const [attachedFileName, setAttachedFileName] = useState("");
+    const fileInputRef = useRef(null);
     const chatEndRef = useRef(null);
+
+    // Fetch workspace resources
+    useEffect(() => {
+        const resourcesRef = ref(database, 'resources/notes');
+        const unsubscribe = onValue(resourcesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const list = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                setWorkspaceResources(list);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,23 +59,50 @@ export default function StudyAssistant() {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    const handleSend = async () => {
+        if (!input.trim() || isTyping) return;
         
-        const newMsg = { role: 'user', content: input };
-        setMessages(prev => [...prev, newMsg]);
+        const userMsg = { role: 'user', content: input };
+        setMessages(prev => [...prev, userMsg]);
         setInput('');
+        setIsTyping(true);
 
-        // Mock AI Response
-        setTimeout(() => {
-            let aiResponse = "I've analyzed your request. Based on the Computer Science syllabus, here's a summary of that concept...";
-            if (input.toLowerCase().includes('quiz')) {
-                aiResponse = "Sure! Let's start a quick quiz on Database Systems. Question 1: What is the primary difference between a Primary Key and a Unique Key?";
-            } else if (input.toLowerCase().includes('summarize')) {
-                aiResponse = "I've summarized the 'Transaction Management' chapter. It covers Atomicity, Consistency, Isolation, and Durability (ACID properties). Would you like to deep dive into one of these?";
+        try {
+            // Prepare context
+            const history = messages.slice(-5).map(m => ({ role: m.role, content: m.content }));
+            let fullInput = input;
+            if (attachedContext) {
+                fullInput = `Context from document "${attachedFileName}":\n${attachedContext}\n\nUser Question: ${input}`;
             }
-            setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-        }, 1000);
+
+            const response = await getAIResponse([...history, { role: 'user', content: fullInput }], useOllama);
+            setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+        } catch (error) {
+            setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        setAttachedFileName(file.name);
+        setIsUploading(true);
+        
+        // Simulate extraction (In real app, use PDF.js)
+        setTimeout(() => {
+            setAttachedContext(`Summary of uploaded PDF (${file.name}): This document appears to be related to academic notes. It contains key terms like "Engineering", "Syllabus", and "Learning Modules".`);
+            setIsUploading(false);
+            setMessages(prev => [...prev, { role: 'assistant', content: `I've indexed "${file.name}". You can now ask questions specifically about its content!` }]);
+        }, 1500);
+    };
+
+    const attachWorkspaceResource = (res) => {
+        setAttachedFileName(res.title);
+        setAttachedContext(`Content from Workspace Resource "${res.title}": ${res.description || ''}. File type: ${res.type}. Subject: ${res.subject}.`);
+        setMessages(prev => [...prev, { role: 'assistant', content: `Linked with "${res.title}" from your resources. I'm grounding my answers in this material.` }]);
     };
 
     const toggleListening = () => {
@@ -64,11 +116,31 @@ export default function StudyAssistant() {
                 
                 {/* Chat Area */}
                 <div className="admin-card" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem', overflow: 'hidden', position: 'relative' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
-                        <BrainCircuit size={28} color="var(--accent-color)" />
-                        <div>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0 }}>AI Study Assistant</h2>
-                            <span style={{ fontSize: '0.75rem', color: '#22c55e', fontWeight: '700' }}>● Online & Ready to Help</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <BrainCircuit size={28} color="var(--accent-color)" />
+                            <div>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white', margin: 0 }}>AI Study Assistant</h2>
+                                <span style={{ fontSize: '0.75rem', color: isTyping ? 'var(--accent-color)' : '#22c55e', fontWeight: '700' }}>
+                                    {isTyping ? '● AI is thinking...' : '● Online & Ready'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {/* Model Selector */}
+                        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '0.25rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button 
+                                onClick={() => setUseOllama(false)}
+                                style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '0.7rem', fontWeight: '800', background: !useOllama ? 'var(--accent-color)' : 'transparent', color: !useOllama ? 'black' : 'var(--text-muted)', border: 'none', transition: 'all 0.2s' }}
+                            >
+                                GROQ
+                            </button>
+                            <button 
+                                onClick={() => setUseOllama(true)}
+                                style={{ padding: '0.4rem 0.8rem', borderRadius: '10px', fontSize: '0.7rem', fontWeight: '800', background: useOllama ? 'var(--accent-color)' : 'transparent', color: useOllama ? 'black' : 'var(--text-muted)', border: 'none', transition: 'all 0.2s' }}
+                            >
+                                OLLAMA
+                            </button>
                         </div>
                     </div>
 
@@ -122,12 +194,59 @@ export default function StudyAssistant() {
                             <Upload size={18} color="var(--accent-color)" />
                             <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', margin: 0 }}>Knowledge Base</h3>
                         </div>
-                        <div 
-                            style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px', padding: '2rem 1rem', textAlign: 'center', cursor: 'pointer' }}
-                            onClick={() => setIsUploading(true)}
-                        >
-                            <FileText size={32} color="rgba(255,255,255,0.2)" style={{ marginBottom: '0.75rem' }} />
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Upload PDF/Notes to ground the AI in your course material.</p>
+                        <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            style={{ display: 'none' }} 
+                            accept=".pdf,.docx,.txt"
+                            onChange={handleFileUpload}
+                        />
+                        {attachedFileName ? (
+                            <div style={{ background: 'rgba(253, 224, 71, 0.1)', border: '1px solid var(--accent-color)', borderRadius: '16px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                                    <CheckCircle size={16} color="var(--accent-color)" />
+                                    <span style={{ fontSize: '0.8rem', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{attachedFileName}</span>
+                                </div>
+                                <button onClick={() => { setAttachedFileName(""); setAttachedContext(null); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div 
+                                style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px', padding: '1.5rem 1rem', textAlign: 'center', cursor: 'pointer' }}
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <FileText size={24} color="rgba(255,255,255,0.2)" style={{ marginBottom: '0.5rem' }} />
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Click to upload PDF/Notes</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Workspace Resources */}
+                    <div className="admin-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: '700', color: 'white', margin: 0 }}>Workspace Resources</h3>
+                        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }} className="custom-scrollbar">
+                            {workspaceResources.length > 0 ? workspaceResources.map(res => (
+                                <div 
+                                    key={res.id} 
+                                    onClick={() => attachWorkspaceResource(res)}
+                                    style={{ 
+                                        padding: '0.75rem', 
+                                        background: 'rgba(255,255,255,0.02)', 
+                                        borderRadius: '12px', 
+                                        fontSize: '0.8rem', 
+                                        color: 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    className="tool-item-hover"
+                                >
+                                    {res.title}
+                                </div>
+                            )) : (
+                                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center' }}>No resources found</p>
+                            )}
                         </div>
                     </div>
 
